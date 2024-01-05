@@ -1,0 +1,265 @@
+---
+title: "Module 2 - Exploring Significance Level & Power"
+author: "Buckley"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Significance Level 
+
+**Definition**:  The *significance level* of a hypothesis test, denoted by $\alpha$, is the probability of rejecting the null hypothesis when the null hypothesis is true.  This is the probability of a Type I error.  
+
+****
+**Example:** A consumer organization believes a certain make of car receives less than its advertised gas mileage. A sample of 10 of these cars is driven & the following gas mileages are recorded: 
+
+```{r mpg}
+mpg <- c(23, 24, 25, 26, 27, 28, 30, 32, 24, 24)
+
+hist(mpg)
+segments(x0=min(mpg), y0=0.75, x1=min(mpg), y1=1.25, col="blue", lwd=3)
+segments(x0=quantile(mpg, 0.25), y0=0.75, x1=quantile(mpg, 0.25), y1=1.25, col="blue", lwd=3)
+segments(x0=quantile(mpg, 0.5), y0=0.75, x1=quantile(mpg, 0.5), y1=1.25, col="blue", lwd=3)
+segments(x0=quantile(mpg, 0.75), y0=0.75, x1=quantile(mpg, 0.75), y1=1.25, col="blue",lwd=3)
+segments(x0=quantile(mpg,0.25),y0=0.75, x1=quantile(mpg,0.75), y1=0.75, col="blue", lwd=3)
+segments(x0=quantile(mpg,0.25),y0=1.25, x1=quantile(mpg,0.75), y1=1.25, col="blue", lwd=3)
+segments(x0=max(mpg), y0=0.75, x1=max(mpg), y1=1.25, col="blue", lwd=3)
+segments(x0=min(mpg), y0=1, x1=quantile(mpg,0.25), y1=1, col="blue", lwd=2)
+segments(x0=max(mpg), y0=1, x1=quantile(mpg,0.75), y1=1, col="blue", lwd=2)
+
+```
+
+Most traditional inferences (especially for a sample this small) would require us to assume gas mileages were sampled from a normal population. The sample does not suggest normality. Is there a way we can test for symmetry using simulation? 
+
+If the sample was random, then the sample mean & standard deviation should be reasonalbe estimates of $\mu$ and $\sigma$. So, we want to know if our sample could have come from a normal population with $\mu$ = `r mean(mpg)` and $\sigma$ = `r sd(mpg)`.
+
+What test statistic can be used to assess normality? 
+
+* skewness = $\frac{n}{(n-1)(n-2)}\sum{\big(\frac{x-\bar{x}}{s}\big)^3}$. This test statistic can be tough to explain. In the statistic, we are summing cubed z-scores.  In a symmetric distribution, the z-scores will be balanced on the positive & negative side resulting in a skewness calculation near 0.  In a right-skewed distribution, the values in the right tail will contribute large positive values to the calculation.  We will end up with a positive value of the skewness.  
+
+* $T(X) = \frac{\bar{X}}{\tilde{X}}$. If the distribution is symmetric, we expect $T(X) = 1$. $T(X)>1$ implies the distribution is right-skewed.
+
+```{r TS_fcns, include=FALSE}
+
+skew1 = function(data){
+  return(length(data) / ((length(data) - 1) * (length(data) - 2)) * sum(((data - mean(data)) / sd(data))^3))
+}
+
+skew2 = function(data){
+  return(mean(data) / median(data))
+}
+
+```
+
+Do these two test statistics preserve Type I error rates?
+
+* Simulate the null distribution of the two statistics.  What does the distribution of the statistics look like when samples are taken from a normal population?  
+
+```{r null_distn}
+
+normal_samples = replicate(10000, rnorm(10, mean = mean(mpg), sd = sd(mpg)))
+
+null_skew1 = apply(normal_samples, 2, skew1)
+
+null_skew2 = apply(normal_samples, 2, skew2)
+
+par(mfrow = c(1, 2))
+hist(null_skew1, main = "Null Distribution T1", xlab = "skewness")
+hist(null_skew2, main = "Null Distribution T2", xlab = "Mean/Median")
+
+```
+
+* Use the null distribution to calculate 1000 p-values for each test statistic.
+
+```{r  pvalue_sim}
+
+pvalue_skew1 = numeric(1000)
+pvalue_skew2 = numeric(1000)
+
+for (i in 1:1000){
+  null_data = rnorm(10, mean = mean(mpg), sd = sd(mpg))
+  
+  pvalue_skew1[i] = sum(null_skew1 >= skew1(null_data)) / 10000
+  pvalue_skew2[i] = sum(null_skew2 >= skew2(null_data)) / 10000
+}
+
+```
+
+* What proportion of our p-values are 0.05 or less?  This will be an estimated significance level.  In the calculation of the p-value, we know the sample data came from a symmetric population (the null is true).  So, the likelihood that we reject the null should be small.
+
+```{r alpha_calc}
+# Test Statistic 1
+sum(pvalue_skew1 <= 0.05) / 1000
+
+# Test Statistic 2
+sum(pvalue_skew2 <= 0.05) / 1000
+
+```
+
+### Power
+
+Both test statistics seem to preserve Type I error rates.  To help us choose between them, we can investigate the power of the test statistic.
+
+**Definition:** The *power* of a test is the probability the null hypothesis is rejected when it is false.  This is the complement of a Type II error.  
+
+The test statistic we've discussed can be used to test the following hypothesis:
+
+> $H_0$: the sample is selected from a symmetric population
+>
+> $H_a$: the sample is selected from a right-skewed population
+
+
+To do this, we need to take samples of size 10 from populations that are right-skewed. The chi-square distribution is a right-skewed distribution where the degree of skew depends on its degrees of freedom: 
+
+Chi-Square | Mean | Median | $\frac{\text{Mean}}{\text{Median}}$ | Skewness = $\sqrt{\frac{8}{k}}$
+-----------|------|--------|----------|-------
+df = 1     | 1    | 0.4705 | 2.1253   | 2.8284
+df = 10    | 10   | 9.348  | 1.0697   | 0.8944
+df = 40    | 40   | 39.337 | 1.0169   | 0.4472
+
+```{r chisq_distns, echo=FALSE}
+par(mfrow=c(1,3))
+curve(dchisq(x, df=1), from = 0, to = 10, col = "red", ylab="", lwd=3)
+curve(dchisq(x, df=10), from = 0, to = 40, col = "blue", ylab="", lwd=3)
+curve(dchisq(x, df=40), from = 10, to = 100, col = "green", ylab="", lwd=3)
+```
+
+**Conjecture:** As the degrees of freedom increases, the power of the test will decrease.  With df = 40, the distribution is still right-skewed, but it's starting to look pretty symmetric.  The test statistics may have a difficult time picking up the right-skew.
+
+
+**Problem:** The chi-sq distributions do not match the mean and spread of the normal distribution we used to simulate the null distributions of the two test statistics. We'll need to fix this before we can calculate the power. 
+
+Let X ~$\chi^2(df = k)$.  It can be shown that E(X) = k and Var(X) = 2k.
+Define a linear transformation $Y = aX + b$.  We know $E(Y) = E(aX + b) = aE(X) + b$ and $Var(Y) = Var(aX + b) = a^2Var(X)$.
+
+Solve for a & b so that $E(Y) = 26.3$ and $Var(Y) = 2.946^2$.
+
+Let's start with the variance and solve for a:
+
+> $Var(Y) = 2.946^2$
+> 
+> $a^2 Var(X) = 2.946^2$
+>
+> $a^2(2k) = 2.946^2$
+>
+>$a = \frac{2.946}{\sqrt{2k}}$
+
+Now use the mean to solve for b:
+
+> $E(Y) = 26.3$
+>
+> $aE(X) + b = 26.3$
+>
+> $\frac{2.946}{\sqrt{2k}}k + b = 26.3$
+>
+> $b = 26.3 - \frac{2.946}{\sqrt{2k}}$
+
+Define $Y = \frac{2.946}{\sqrt{2k}} X + 26.3 - \frac{2.946}{\sqrt{2k}}$, where X is a randomly generated chi-sq sample with *k* degrees of freedom from R.
+
+Let's plot the transformed chi-square distribution with df = 1:
+
+```{r chisqtrans}
+curve((2.946/sqrt(2)*dchisq(x,df=1) + 26.3 - 2.946/sqrt(2)), from = 0, to = 10, col="red", ylab="", lwd=3)
+```
+
+We can use the transformation to simulate from right-skewed distributions that are scaled appropriately:
+
+```{r chisq_transformations}
+par(mfrow=c(1,3))
+chisq.1 = rchisq(10000, df=1)
+chisq.1.transf = 2.946/sqrt(2)*chisq.1 + 26.3 - 2.946/sqrt(2)
+
+hist(chisq.1.transf)
+mean(chisq.1.transf)
+sd(chisq.1.transf)
+
+chisq.10 = rchisq(10000, df=10)
+chisq.10.transf = 2.946/sqrt(2*10)*chisq.10 + 26.3 - 2.946*10/sqrt(2*10)
+
+hist(chisq.10.transf)
+mean(chisq.10.transf)
+sd(chisq.10.transf)
+
+chisq.40 = rchisq(10000, df=40)
+chisq.40.transf = 2.946/sqrt(2*40)*chisq.40 + 26.3 - 2.946*40/sqrt(2*40)
+
+hist(chisq.40.transf)
+mean(chisq.40.transf)
+sd(chisq.40.transf)
+```
+
+Now that we can simulate data from skewed distributions (i.e. the null is false), we can start to examine the power:
+
+* Take a sample of size 10 from a skewed distribution (this matches our original sample size of gas mileages).
+
+* Transform the sample to agree with the parameters of the normal distribution (symmetric - null is true) used to simulate the null distribution.
+
+* Compute the two test statistics and their respective p-values.
+
+* Repeat that process 10,000 times.
+
+* To find the power, we'll calculate the proportion of p-values that lead us to reject the null hypothesis at a significance level of 0.05.
+
+```{r power.1}
+pvalues.df1.skew1 = numeric(10000)
+pvalues.df1.skew2 = numeric(10000)
+
+for (i in 1:10000){
+  sample = rchisq(10, df=1)
+  sample.transf = 2.946/sqrt(2)*sample + 26.3 - 2.946/sqrt(2)
+  ts.skew1 = skew1(sample.transf)
+  ts.skew2 = skew2(sample.transf)
+  pvalues.df1.skew1[i] <- sum(null_skew1 >= ts.skew1)/10000
+  pvalues.df1.skew2[i] <- sum(null_skew2 >= ts.skew2)/10000
+}
+
+# Power for Skew1
+sum(pvalues.df1.skew1 <= 0.05)/10000
+
+# Power for Skew2
+sum(pvalues.df1.skew2 <= 0.05)/10000
+```
+
+The power for the first test statistic is 0.6985. 69.85% of samples generated from a right-skewed population lead to that correct decision using the first test statistic. 
+
+```{r power.10}
+pvalues.df10.skew1 <- numeric(10000)
+pvalues.df10.skew2 <- numeric(10000)
+
+for(i in 1:10000){
+  sample <- rchisq(10, df=10)
+  sample.transf <- 2.946/sqrt(2*10)*sample + 26.3 - 2.946*10/sqrt(2*10)
+  ts.skew1 <- skew1(sample.transf)
+  ts.skew2 <- skew2(sample.transf)
+  pvalues.df10.skew1[i] <- sum(null_skew1 >= ts.skew1)/10000
+  pvalues.df10.skew2[i] <- sum(null_skew2 >= ts.skew2)/10000
+}
+
+# Power for Skew1
+sum(pvalues.df10.skew1 <= 0.05)/10000
+
+# Power for Skew2
+sum(pvalues.df10.skew2 <= 0.05)/10000
+```
+
+```{r power.40}
+pvalues.df40.skew1 <- numeric(10000)
+pvalues.df40.skew2 <- numeric(10000)
+
+for(i in 1:10000){
+  sample <- rchisq(10, df=40)
+  sample.transf <- 2.946/sqrt(2*40)*sample + 26.3 - 2.946*40/sqrt(2*40)
+  ts.skew1 <- skew1(sample.transf)
+  ts.skew2 <- skew2(sample.transf)
+  pvalues.df40.skew1[i] <- sum(null_skew1 >= ts.skew1)/10000
+  pvalues.df40.skew2[i] <- sum(null_skew2 >= ts.skew2)/10000
+}
+
+# Power for Skew1
+sum(pvalues.df40.skew1 <= 0.05)/10000
+
+# Power for Skew2
+sum(pvalues.df40.skew2 <= 0.05)/10000
+```

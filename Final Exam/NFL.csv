@@ -1,0 +1,501 @@
+Year,Week,Day,Winner,Loser,PtsW,PtsL,Margin
+2015,15,Sun,Carolina Panthers,New York Giants,38,35,3
+2015,15,Thu,St. Louis Rams,Tampa Bay Buccaneers,31,23,8
+2013,15,Sun,Minnesota Vikings,Philadelphia Eagles,48,30,18
+2012,1,Sun,San Francisco 49ers,Green Bay Packers,30,22,8
+2014,9,Sun,Arizona Cardinals,Dallas Cowboys,28,17,11
+2014,5,Sun,Pittsburgh Steelers,Jacksonville Jaguars,17,9,8
+2013,1,Sun,New York Jets,Tampa Bay Buccaneers,18,17,1
+2014,6,Sun,San Diego Chargers,Oakland Raiders,31,28,3
+2013,8,Sun,Detroit Lions,Dallas Cowboys,31,30,1
+2012,16,Sat,Atlanta Falcons,Detroit Lions,31,18,13
+2012,17,Sun,Indianapolis Colts,Houston Texans,28,16,12
+2012,11,Sun,Baltimore Ravens,Pittsburgh Steelers,13,10,3
+2014,13,Sun,Atlanta Falcons,Arizona Cardinals,29,18,11
+2012,15,Thu,Cincinnati Bengals,Philadelphia Eagles,34,13,21
+2013,4,Sun,Denver Broncos,Philadelphia Eagles,52,20,32
+2015,14,Sun,Philadelphia Eagles,Buffalo Bills,23,20,3
+2015,14,Sun,Washington Redskins,Chicago Bears,24,21,3
+2013,6,Sun,New England Patriots,New Orleans Saints,30,27,3
+2015,4,Sun,Indianapolis Colts,Jacksonville Jaguars,16,13,3
+2014,6,Sun,Cleveland Browns,Pittsburgh Steelers,31,10,21
+2013,9,Sun,New York Jets,New Orleans Saints,26,20,6
+2013,4,Sun,Buffalo Bills,Baltimore Ravens,23,20,3
+2015,9,Sun,Tennessee Titans,New Orleans Saints,34,28,6
+2015,13,Sun,Miami Dolphins,Baltimore Ravens,15,13,2
+2013,7,Mon,New York Giants,Minnesota Vikings,23,7,16
+2015,7,Sun,Washington Redskins,Tampa Bay Buccaneers,31,30,1
+2012,16,Sun,Chicago Bears,Arizona Cardinals,28,13,15
+2014,7,Sun,Denver Broncos,San Francisco 49ers,42,17,25
+2013,17,Sun,Indianapolis Colts,Jacksonville Jaguars,30,10,20
+2013,9,Sun,Cleveland Browns,Baltimore Ravens,24,18,6
+2015,10,Sun,New England Patriots,New York Giants,27,26,1
+2013,4,Sun,Seattle Seahawks,Houston Texans,23,20,3
+2012,8,Sun,Miami Dolphins,New York Jets,30,9,21
+2013,9,Sun,Washington Redskins,San Diego Chargers,30,24,6
+2014,15,Sun,Denver Broncos,San Diego Chargers,22,10,12
+2015,6,Sun,Minnesota Vikings,Kansas City Chiefs,16,10,6
+2014,15,Sun,New York Giants,Washington Redskins,24,13,11
+2013,3,Sun,Baltimore Ravens,Houston Texans,30,9,21
+2013,5,Sun,Baltimore Ravens,Miami Dolphins,26,23,3
+2012,5,Sun,Baltimore Ravens,Kansas City Chiefs,9,6,3
+2015,11,Sun,Arizona Cardinals,Cincinnati Bengals,34,31,3
+2013,17,Sun,New York Jets,Miami Dolphins,20,7,13
+2014,1,Sun,Philadelphia Eagles,Jacksonville Jaguars,34,17,17
+2015,8,Mon,Carolina Panthers,Indianapolis Colts,29,26,3
+2012,4,Sun,Atlanta Falcons,Carolina Panthers,30,28,2
+2012,13,Sun,Denver Broncos,Tampa Bay Buccaneers,31,23,8
+2015,10,Sun,Miami Dolphins,Philadelphia Eagles,20,19,1
+2012,11,Mon,San Francisco 49ers,Chicago Bears,32,7,25
+2014,14,Thu,Dallas Cowboys,Chicago Bears,41,28,13
+2012,1,Mon,San Diego Chargers,Oakland Raiders,22,14,8
+2014,10,Mon,Philadelphia Eagles,Carolina Panthers,45,21,24
+2014,6,Thu,Indianapolis Colts,Houston Texans,33,28,5
+2015,13,Sun,Carolina Panthers,New Orleans Saints,41,38,3
+2015,1,Sun,Miami Dolphins,Washington Redskins,17,10,7
+2012,10,Sun,Houston Texans,Chicago Bears,13,6,7
+2015,11,Sun,Kansas City Chiefs,San Diego Chargers,33,3,30
+2012,9,Sun,Seattle Seahawks,Minnesota Vikings,30,20,10
+2015,3,Mon,Green Bay Packers,Kansas City Chiefs,38,28,10
+2015,14,Sun,Kansas City Chiefs,San Diego Chargers,10,3,7
+2013,6,Thu,Chicago Bears,New York Giants,27,21,6
+2015,17,Sun,Seattle Seahawks,Arizona Cardinals,36,6,30
+2012,13,Sun,Cincinnati Bengals,San Diego Chargers,20,13,7
+2014,12,Sun,Cincinnati Bengals,Houston Texans,22,13,9
+2012,9,Sun,Chicago Bears,Tennessee Titans,51,20,31
+2014,14,Sun,Detroit Lions,Tampa Bay Buccaneers,34,17,17
+2012,14,Sun,San Francisco 49ers,Miami Dolphins,27,13,14
+2015,8,Sun,Kansas City Chiefs,Detroit Lions,45,10,35
+2014,13,Sun,St. Louis Rams,Oakland Raiders,52,0,52
+2015,5,Sun,Philadelphia Eagles,New Orleans Saints,39,17,22
+2015,13,Thu,Green Bay Packers,Detroit Lions,27,23,4
+2015,17,Sun,Carolina Panthers,Tampa Bay Buccaneers,38,10,28
+2013,4,Sun,Cleveland Browns,Cincinnati Bengals,17,6,11
+2015,17,Sun,Minnesota Vikings,Green Bay Packers,20,13,7
+2015,11,Sun,Carolina Panthers,Washington Redskins,44,16,28
+2013,14,Mon,Chicago Bears,Dallas Cowboys,45,28,17
+2014,15,Sun,Carolina Panthers,Tampa Bay Buccaneers,19,17,2
+2012,17,Sun,Washington Redskins,Dallas Cowboys,28,18,10
+2014,9,Sun,Kansas City Chiefs,New York Jets,24,10,14
+2012,16,Sun,New Orleans Saints,Dallas Cowboys,34,31,3
+2012,14,Sun,Philadelphia Eagles,Tampa Bay Buccaneers,23,21,2
+2014,9,Sun,Cincinnati Bengals,Jacksonville Jaguars,33,23,10
+2015,2,Sun,Minnesota Vikings,Detroit Lions,26,16,10
+2012,11,Sun,Dallas Cowboys,Cleveland Browns,23,20,3
+2014,6,Sun,Arizona Cardinals,Washington Redskins,30,20,10
+2013,12,Sun,New England Patriots,Denver Broncos,34,31,3
+2012,1,Sun,Denver Broncos,Pittsburgh Steelers,31,19,12
+2015,9,Sun,Pittsburgh Steelers,Oakland Raiders,38,35,3
+2012,13,Sun,Buffalo Bills,Jacksonville Jaguars,34,18,16
+2014,2,Sun,St. Louis Rams,Tampa Bay Buccaneers,19,17,2
+2012,8,Mon,San Francisco 49ers,Arizona Cardinals,24,3,21
+2015,15,Sun,Houston Texans,Indianapolis Colts,16,10,6
+2014,8,Sun,Buffalo Bills,New York Jets,43,23,20
+2015,17,Sun,San Francisco 49ers,St. Louis Rams,19,16,3
+2014,4,Sun,Miami Dolphins,Oakland Raiders,38,14,24
+2015,13,Sun,Buffalo Bills,Houston Texans,30,21,9
+2012,11,Sun,Houston Texans,Jacksonville Jaguars,43,37,6
+2014,14,Sun,Baltimore Ravens,Miami Dolphins,28,13,15
+2013,7,Sun,New York Jets,New England Patriots,30,27,3
+2013,2,Sun,Seattle Seahawks,San Francisco 49ers,29,3,26
+2015,10,Sun,Arizona Cardinals,Seattle Seahawks,39,32,7
+2012,6,Sun,Atlanta Falcons,Oakland Raiders,23,20,3
+2012,17,Sun,Pittsburgh Steelers,Cleveland Browns,24,10,14
+2015,9,Sun,New York Jets,Jacksonville Jaguars,28,23,5
+2015,7,Sun,Kansas City Chiefs,Pittsburgh Steelers,23,13,10
+2012,15,Sun,Green Bay Packers,Chicago Bears,21,13,8
+2012,8,Sun,Detroit Lions,Seattle Seahawks,28,24,4
+2014,12,Sun,Green Bay Packers,Minnesota Vikings,24,21,3
+2013,7,Sun,Green Bay Packers,Cleveland Browns,31,13,18
+2013,14,Sun,Tampa Bay Buccaneers,Buffalo Bills,27,6,21
+2013,9,Sun,Tennessee Titans,St. Louis Rams,28,21,7
+2013,17,Sun,New York Giants,Washington Redskins,20,6,14
+2015,2,Sun,Cincinnati Bengals,San Diego Chargers,24,19,5
+2014,3,Sun,Indianapolis Colts,Jacksonville Jaguars,44,17,27
+2015,13,Sun,Tampa Bay Buccaneers,Atlanta Falcons,23,19,4
+2013,11,Sun,New York Giants,Green Bay Packers,27,13,14
+2013,17,Sun,New Orleans Saints,Tampa Bay Buccaneers,42,17,25
+2014,3,Sun,Cincinnati Bengals,Tennessee Titans,33,7,26
+2013,7,Sun,San Francisco 49ers,Tennessee Titans,31,17,14
+2012,14,Sun,New York Giants,New Orleans Saints,52,27,25
+2015,3,Thu,New York Giants,Washington Redskins,32,21,11
+2012,5,Sun,New England Patriots,Denver Broncos,31,21,10
+2015,3,Sun,Philadelphia Eagles,New York Jets,24,17,7
+2014,11,Sun,Arizona Cardinals,Detroit Lions,14,6,8
+2015,11,Thu,Jacksonville Jaguars,Tennessee Titans,19,13,6
+2013,4,Sun,Washington Redskins,Oakland Raiders,24,14,10
+2015,5,Sun,Green Bay Packers,St. Louis Rams,24,10,14
+2014,5,Sun,Indianapolis Colts,Baltimore Ravens,20,13,7
+2012,16,Sun,Seattle Seahawks,San Francisco 49ers,42,13,29
+2015,3,Sun,Seattle Seahawks,Chicago Bears,26,0,26
+2013,11,Mon,Carolina Panthers,New England Patriots,24,20,4
+2014,11,Sun,San Francisco 49ers,New York Giants,16,10,6
+2013,4,Sun,Indianapolis Colts,Jacksonville Jaguars,37,3,34
+2013,15,Sun,St. Louis Rams,New Orleans Saints,27,16,11
+2014,5,Mon,Seattle Seahawks,Washington Redskins,27,17,10
+2013,7,Sun,Buffalo Bills,Miami Dolphins,23,21,2
+2014,17,Sun,Dallas Cowboys,Washington Redskins,44,17,27
+2014,16,Sun,Seattle Seahawks,Arizona Cardinals,35,6,29
+2015,8,Sun,Arizona Cardinals,Cleveland Browns,34,20,14
+2012,17,Sun,Buffalo Bills,New York Jets,28,9,19
+2012,12,Mon,Carolina Panthers,Philadelphia Eagles,30,22,8
+2012,15,Sun,Washington Redskins,Cleveland Browns,38,21,17
+2015,2,Sun,New England Patriots,Buffalo Bills,40,32,8
+2015,10,Sun,Detroit Lions,Green Bay Packers,18,16,2
+2014,10,Sun,Green Bay Packers,Chicago Bears,55,14,41
+2015,17,Sun,New Orleans Saints,Atlanta Falcons,20,17,3
+2013,5,Sun,Oakland Raiders,San Diego Chargers,27,17,10
+2012,6,Mon,Denver Broncos,San Diego Chargers,35,24,11
+2015,9,Mon,Chicago Bears,San Diego Chargers,22,19,3
+2015,8,Sun,Denver Broncos,Green Bay Packers,29,10,19
+2012,13,Sun,Seattle Seahawks,Chicago Bears,23,17,6
+2013,1,Thu,Denver Broncos,Baltimore Ravens,49,27,22
+2012,12,Sun,Indianapolis Colts,Buffalo Bills,20,13,7
+2014,7,Sun,Jacksonville Jaguars,Cleveland Browns,24,6,18
+2012,2,Sun,Cincinnati Bengals,Cleveland Browns,34,27,7
+2014,8,Sun,Minnesota Vikings,Tampa Bay Buccaneers,19,13,6
+2012,16,Sun,Miami Dolphins,Buffalo Bills,24,10,14
+2014,3,Sun,Philadelphia Eagles,Washington Redskins,37,34,3
+2015,2,Sun,Arizona Cardinals,Chicago Bears,48,23,25
+2012,14,Thu,Denver Broncos,Oakland Raiders,26,13,13
+2013,12,Sun,St. Louis Rams,Chicago Bears,42,21,21
+2013,8,Sun,Kansas City Chiefs,Cleveland Browns,23,17,6
+2012,14,Sun,Minnesota Vikings,Chicago Bears,21,14,7
+2014,8,Sun,Kansas City Chiefs,St. Louis Rams,34,7,27
+2015,13,Sun,Arizona Cardinals,St. Louis Rams,27,3,24
+2012,10,Sun,Baltimore Ravens,Oakland Raiders,55,20,35
+2014,2,Sun,Cincinnati Bengals,Atlanta Falcons,24,10,14
+2015,17,Sun,Philadelphia Eagles,New York Giants,35,30,5
+2013,13,Sun,Minnesota Vikings,Chicago Bears,23,20,3
+2015,11,Sun,Dallas Cowboys,Miami Dolphins,24,14,10
+2014,16,Mon,Cincinnati Bengals,Denver Broncos,37,28,9
+2014,17,Sun,Baltimore Ravens,Cleveland Browns,20,10,10
+2014,2,Sun,Arizona Cardinals,New York Giants,25,14,11
+2013,16,Sun,San Diego Chargers,Oakland Raiders,26,13,13
+2014,6,Sun,New England Patriots,Buffalo Bills,37,22,15
+2015,15,Sun,Pittsburgh Steelers,Denver Broncos,34,27,7
+2015,4,Sun,New York Jets,Miami Dolphins,27,14,13
+2015,8,Sun,St. Louis Rams,San Francisco 49ers,27,6,21
+2015,2,Sun,Pittsburgh Steelers,San Francisco 49ers,43,18,25
+2014,16,Thu,Jacksonville Jaguars,Tennessee Titans,21,13,8
+2015,7,Sun,Oakland Raiders,San Diego Chargers,37,29,8
+2015,4,Sun,St. Louis Rams,Arizona Cardinals,24,22,2
+2012,1,Sun,New England Patriots,Tennessee Titans,34,13,21
+2012,15,Sun,San Francisco 49ers,New England Patriots,41,34,7
+2014,12,Sun,Dallas Cowboys,New York Giants,31,28,3
+2014,13,Mon,Miami Dolphins,New York Jets,16,13,3
+2013,3,Sun,Seattle Seahawks,Jacksonville Jaguars,45,17,28
+2012,12,Sun,Miami Dolphins,Seattle Seahawks,24,21,3
+2014,13,Thu,Philadelphia Eagles,Dallas Cowboys,33,10,23
+2012,9,Sun,Green Bay Packers,Arizona Cardinals,31,17,14
+2014,10,Sun,Kansas City Chiefs,Buffalo Bills,17,13,4
+2014,7,Sun,Indianapolis Colts,Cincinnati Bengals,27,0,27
+2015,4,Sun,Washington Redskins,Philadelphia Eagles,23,20,3
+2014,13,Sun,Buffalo Bills,Cleveland Browns,26,10,16
+2012,8,Sun,Oakland Raiders,Kansas City Chiefs,26,16,10
+2015,13,Sun,Seattle Seahawks,Minnesota Vikings,38,7,31
+2013,14,Sun,New York Jets,Oakland Raiders,37,27,10
+2014,11,Sun,Chicago Bears,Minnesota Vikings,21,13,8
+2013,13,Sun,Atlanta Falcons,Buffalo Bills,34,31,3
+2015,5,Sun,Chicago Bears,Kansas City Chiefs,18,17,1
+2012,8,Sun,Pittsburgh Steelers,Washington Redskins,27,12,15
+2012,3,Sun,Cincinnati Bengals,Washington Redskins,38,31,7
+2015,5,Sun,New England Patriots,Dallas Cowboys,30,6,24
+2012,10,Sun,Dallas Cowboys,Philadelphia Eagles,38,23,15
+2012,3,Sun,Jacksonville Jaguars,Indianapolis Colts,22,17,5
+2015,12,Sun,Indianapolis Colts,Tampa Bay Buccaneers,25,12,13
+2014,14,Sun,Indianapolis Colts,Cleveland Browns,25,24,1
+2013,13,Thu,Baltimore Ravens,Pittsburgh Steelers,22,20,2
+2014,16,Sat,Washington Redskins,Philadelphia Eagles,27,24,3
+2014,3,Sun,Seattle Seahawks,Denver Broncos,26,20,6
+2012,1,Sun,Tampa Bay Buccaneers,Carolina Panthers,16,10,6
+2012,1,Sun,Washington Redskins,New Orleans Saints,40,32,8
+2013,17,Sun,Tennessee Titans,Houston Texans,16,10,6
+2015,14,Sun,New York Jets,Tennessee Titans,30,8,22
+2014,13,Sun,Minnesota Vikings,Carolina Panthers,31,13,18
+2013,10,Sun,New Orleans Saints,Dallas Cowboys,49,17,32
+2015,14,Sun,Carolina Panthers,Atlanta Falcons,38,0,38
+2015,11,Sun,Denver Broncos,Chicago Bears,17,15,2
+2014,16,Sun,Green Bay Packers,Tampa Bay Buccaneers,20,3,17
+2014,10,Sun,Arizona Cardinals,St. Louis Rams,31,14,17
+2013,16,Sun,Cincinnati Bengals,Minnesota Vikings,42,14,28
+2014,6,Sun,Cincinnati Bengals,Carolina Panthers,37,37,0
+2014,12,Sun,Cleveland Browns,Atlanta Falcons,26,24,2
+2012,6,Sun,Tampa Bay Buccaneers,Kansas City Chiefs,38,10,28
+2014,8,Sun,Pittsburgh Steelers,Indianapolis Colts,51,34,17
+2012,2,Sun,Carolina Panthers,New Orleans Saints,35,27,8
+2014,15,Sun,Seattle Seahawks,San Francisco 49ers,17,7,10
+2015,10,Sun,Kansas City Chiefs,Denver Broncos,29,13,16
+2012,13,Sun,Pittsburgh Steelers,Baltimore Ravens,23,20,3
+2013,8,Thu,Carolina Panthers,Tampa Bay Buccaneers,31,13,18
+2013,7,Sun,Carolina Panthers,St. Louis Rams,30,15,15
+2012,10,Mon,Pittsburgh Steelers,Kansas City Chiefs,16,13,3
+2013,6,Sun,San Francisco 49ers,Arizona Cardinals,32,20,12
+2013,3,Sun,Cleveland Browns,Minnesota Vikings,31,27,4
+2014,15,Sun,Detroit Lions,Minnesota Vikings,16,14,2
+2015,11,Sun,Green Bay Packers,Minnesota Vikings,30,13,17
+2014,17,Sun,Philadelphia Eagles,New York Giants,34,26,8
+2013,5,Thu,Cleveland Browns,Buffalo Bills,37,24,13
+2013,3,Thu,Kansas City Chiefs,Philadelphia Eagles,26,16,10
+2013,11,Sun,Cincinnati Bengals,Cleveland Browns,41,20,21
+2013,1,Sun,Miami Dolphins,Cleveland Browns,23,10,13
+2015,5,Sun,Atlanta Falcons,Washington Redskins,25,19,6
+2014,4,Sun,Dallas Cowboys,New Orleans Saints,38,17,21
+2014,16,Sun,New York Giants,St. Louis Rams,37,27,10
+2012,13,Sun,Cleveland Browns,Oakland Raiders,20,17,3
+2013,15,Sun,Chicago Bears,Cleveland Browns,38,31,7
+2012,13,Sun,Dallas Cowboys,Philadelphia Eagles,38,33,5
+2014,9,Thu,New Orleans Saints,Carolina Panthers,28,10,18
+2013,6,Sun,Green Bay Packers,Baltimore Ravens,19,17,2
+2014,2,Sun,Green Bay Packers,New York Jets,31,24,7
+2013,15,Sun,San Francisco 49ers,Tampa Bay Buccaneers,33,14,19
+2012,16,Sun,Denver Broncos,Cleveland Browns,34,12,22
+2015,10,Mon,Houston Texans,Cincinnati Bengals,10,6,4
+2013,4,Sun,New England Patriots,Atlanta Falcons,30,23,7
+2012,11,Sun,Denver Broncos,San Diego Chargers,30,23,7
+2014,14,Mon,Green Bay Packers,Atlanta Falcons,43,37,6
+2014,16,Sun,Atlanta Falcons,New Orleans Saints,30,14,16
+2014,8,Sun,New England Patriots,Chicago Bears,51,23,28
+2013,15,Sun,Miami Dolphins,New England Patriots,24,20,4
+2014,7,Sun,St. Louis Rams,Seattle Seahawks,28,26,2
+2013,15,Thu,San Diego Chargers,Denver Broncos,27,20,7
+2013,4,Sun,Kansas City Chiefs,New York Giants,31,7,24
+2015,6,Sun,Detroit Lions,Chicago Bears,37,34,3
+2013,5,Sun,Arizona Cardinals,Carolina Panthers,22,6,16
+2013,9,Sun,Seattle Seahawks,Tampa Bay Buccaneers,27,24,3
+2012,17,Sun,Seattle Seahawks,St. Louis Rams,20,13,7
+2012,14,Sun,St. Louis Rams,Buffalo Bills,15,12,3
+2012,14,Sun,Dallas Cowboys,Cincinnati Bengals,20,19,1
+2015,16,Sun,Chicago Bears,Tampa Bay Buccaneers,26,21,5
+2014,14,Sun,Houston Texans,Jacksonville Jaguars,27,13,14
+2012,15,Sun,Denver Broncos,Baltimore Ravens,34,17,17
+2012,14,Sun,Green Bay Packers,Detroit Lions,27,20,7
+2014,6,Sun,Tennessee Titans,Jacksonville Jaguars,16,14,2
+2014,12,Sun,Denver Broncos,Miami Dolphins,39,36,3
+2012,8,Sun,Cleveland Browns,San Diego Chargers,7,6,1
+2015,7,Sun,Jacksonville Jaguars,Buffalo Bills,34,31,3
+2014,17,Sun,Buffalo Bills,New England Patriots,17,9,8
+2012,5,Sun,Atlanta Falcons,Washington Redskins,24,17,7
+2012,7,Sun,Oakland Raiders,Jacksonville Jaguars,26,23,3
+2015,7,Sun,New Orleans Saints,Indianapolis Colts,27,21,6
+2013,4,Sun,San Diego Chargers,Dallas Cowboys,30,21,9
+2014,14,Sun,Pittsburgh Steelers,Cincinnati Bengals,42,21,21
+2012,17,Sun,Carolina Panthers,New Orleans Saints,44,38,6
+2015,5,Sun,Buffalo Bills,Tennessee Titans,14,13,1
+2013,6,Sun,Seattle Seahawks,Tennessee Titans,20,13,7
+2015,12,Mon,Baltimore Ravens,Cleveland Browns,33,27,6
+2012,1,Sun,Philadelphia Eagles,Cleveland Browns,17,16,1
+2014,11,Sun,Cincinnati Bengals,New Orleans Saints,27,10,17
+2014,1,Sun,Denver Broncos,Indianapolis Colts,31,24,7
+2013,6,Sun,Detroit Lions,Cleveland Browns,31,17,14
+2014,14,Sun,St. Louis Rams,Washington Redskins,24,0,24
+2013,6,Mon,San Diego Chargers,Indianapolis Colts,19,9,10
+2015,11,Sun,Tampa Bay Buccaneers,Philadelphia Eagles,45,17,28
+2014,9,Mon,Indianapolis Colts,New York Giants,40,24,16
+2013,12,Sun,Jacksonville Jaguars,Houston Texans,13,6,7
+2013,4,Thu,San Francisco 49ers,St. Louis Rams,35,11,24
+2013,13,Sun,New England Patriots,Houston Texans,34,31,3
+2015,8,Sun,Minnesota Vikings,Chicago Bears,23,20,3
+2013,15,Sun,Buffalo Bills,Jacksonville Jaguars,27,20,7
+2013,8,Sun,New England Patriots,Miami Dolphins,27,17,10
+2013,8,Sun,Cincinnati Bengals,New York Jets,49,9,40
+2015,3,Sun,Oakland Raiders,Cleveland Browns,27,20,7
+2015,5,Thu,Indianapolis Colts,Houston Texans,27,20,7
+2012,14,Sun,Washington Redskins,Baltimore Ravens,31,28,3
+2015,15,Sun,Kansas City Chiefs,Baltimore Ravens,34,14,20
+2015,17,Sun,Buffalo Bills,New York Jets,22,17,5
+2015,16,Sun,Buffalo Bills,Dallas Cowboys,16,6,10
+2013,13,Thu,Dallas Cowboys,Oakland Raiders,31,24,7
+2012,6,Sun,Buffalo Bills,Arizona Cardinals,19,16,3
+2012,4,Sun,Green Bay Packers,New Orleans Saints,28,27,1
+2012,7,Sun,Houston Texans,Baltimore Ravens,43,13,30
+2012,7,Sun,Tennessee Titans,Buffalo Bills,35,34,1
+2014,3,Mon,Chicago Bears,New York Jets,27,19,8
+2012,9,Sun,Tampa Bay Buccaneers,Oakland Raiders,42,32,10
+2014,15,Sun,Buffalo Bills,Green Bay Packers,21,13,8
+2012,17,Sun,New York Giants,Philadelphia Eagles,42,7,35
+2014,5,Sun,New Orleans Saints,Tampa Bay Buccaneers,37,31,6
+2015,11,Sun,Baltimore Ravens,St. Louis Rams,16,13,3
+2014,12,Thu,Oakland Raiders,Kansas City Chiefs,24,20,4
+2013,14,Sun,Arizona Cardinals,St. Louis Rams,30,10,20
+2012,7,Sun,Minnesota Vikings,Arizona Cardinals,21,14,7
+2014,5,Sun,Cleveland Browns,Tennessee Titans,29,28,1
+2013,17,Sun,New England Patriots,Buffalo Bills,34,20,14
+2012,4,Sun,Cincinnati Bengals,Jacksonville Jaguars,27,10,17
+2012,6,Sun,Baltimore Ravens,Dallas Cowboys,31,29,2
+2013,10,Sun,Seattle Seahawks,Atlanta Falcons,33,10,23
+2015,16,Sat,Washington Redskins,Philadelphia Eagles,38,24,14
+2014,3,Sun,Detroit Lions,Green Bay Packers,19,7,12
+2015,11,Sun,Indianapolis Colts,Atlanta Falcons,24,21,3
+2015,2,Sun,Green Bay Packers,Seattle Seahawks,27,17,10
+2013,14,Sun,San Francisco 49ers,Seattle Seahawks,19,17,2
+2013,2,Sun,Buffalo Bills,Carolina Panthers,24,23,1
+2015,6,Sun,Pittsburgh Steelers,Arizona Cardinals,25,13,12
+2012,12,Sun,Atlanta Falcons,Tampa Bay Buccaneers,24,23,1
+2012,2,Sun,Arizona Cardinals,New England Patriots,20,18,2
+2013,2,Sun,Chicago Bears,Minnesota Vikings,31,30,1
+2012,15,Sun,Dallas Cowboys,Pittsburgh Steelers,27,24,3
+2015,12,Sun,Minnesota Vikings,Atlanta Falcons,20,10,10
+2015,14,Sun,Cleveland Browns,San Francisco 49ers,24,10,14
+2015,1,Sun,Buffalo Bills,Indianapolis Colts,27,14,13
+2014,11,Sun,Houston Texans,Cleveland Browns,23,7,16
+2014,8,Thu,Denver Broncos,San Diego Chargers,35,21,14
+2013,12,Sun,Carolina Panthers,Miami Dolphins,20,16,4
+2014,15,Sun,New England Patriots,Miami Dolphins,41,13,28
+2012,8,Thu,Tampa Bay Buccaneers,Minnesota Vikings,36,17,19
+2012,9,Sun,Detroit Lions,Jacksonville Jaguars,31,14,17
+2012,2,Sun,San Francisco 49ers,Detroit Lions,27,19,8
+2014,13,Sun,Houston Texans,Tennessee Titans,45,21,24
+2014,9,Sun,St. Louis Rams,San Francisco 49ers,13,10,3
+2013,15,Sun,Pittsburgh Steelers,Cincinnati Bengals,30,20,10
+2014,15,Sun,Kansas City Chiefs,Oakland Raiders,31,13,18
+2015,14,Sun,New England Patriots,Houston Texans,27,6,21
+2014,16,Sun,Miami Dolphins,Minnesota Vikings,37,35,2
+2014,17,Sun,Indianapolis Colts,Tennessee Titans,27,10,17
+2015,13,Sun,Kansas City Chiefs,Oakland Raiders,34,20,14
+2013,4,Mon,New Orleans Saints,Miami Dolphins,38,17,21
+2014,4,Sun,Indianapolis Colts,Tennessee Titans,41,17,24
+2013,11,Sun,Pittsburgh Steelers,Detroit Lions,37,27,10
+2014,8,Sun,Seattle Seahawks,Carolina Panthers,13,9,4
+2014,12,Sun,New England Patriots,Detroit Lions,34,9,25
+2012,10,Thu,Indianapolis Colts,Jacksonville Jaguars,27,10,17
+2012,2,Sun,Seattle Seahawks,Dallas Cowboys,27,7,20
+2015,8,Sun,Tampa Bay Buccaneers,Atlanta Falcons,23,20,3
+2014,7,Sun,Baltimore Ravens,Atlanta Falcons,29,7,22
+2015,9,Sun,Minnesota Vikings,St. Louis Rams,21,18,3
+2013,3,Sun,Chicago Bears,Pittsburgh Steelers,40,23,17
+2014,14,Sun,New York Giants,Tennessee Titans,36,7,29
+2015,14,Sun,Jacksonville Jaguars,Indianapolis Colts,51,16,35
+2014,10,Sun,Detroit Lions,Miami Dolphins,20,16,4
+2012,13,Thu,Atlanta Falcons,New Orleans Saints,23,13,10
+2013,7,Sun,Indianapolis Colts,Denver Broncos,39,33,6
+2012,5,Sun,Minnesota Vikings,Tennessee Titans,30,7,23
+2012,6,Sun,Miami Dolphins,St. Louis Rams,17,14,3
+2015,12,Thu,Carolina Panthers,Dallas Cowboys,33,14,19
+2013,12,Sun,Minnesota Vikings,Green Bay Packers,26,26,0
+2012,12,Sun,St. Louis Rams,Arizona Cardinals,31,17,14
+2012,1,Sun,Arizona Cardinals,Seattle Seahawks,20,16,4
+2012,7,Mon,Chicago Bears,Detroit Lions,13,7,6
+2013,7,Sun,Atlanta Falcons,Tampa Bay Buccaneers,31,23,8
+2012,4,Sun,Washington Redskins,Tampa Bay Buccaneers,24,22,2
+2013,3,Sun,Dallas Cowboys,St. Louis Rams,31,7,24
+2013,1,Sun,St. Louis Rams,Arizona Cardinals,27,24,3
+2012,10,Sun,New Orleans Saints,Atlanta Falcons,31,27,4
+2012,3,Sun,Kansas City Chiefs,New Orleans Saints,27,24,3
+2014,6,Sun,Chicago Bears,Atlanta Falcons,27,13,14
+2013,6,Sun,Carolina Panthers,Minnesota Vikings,35,10,25
+2014,1,Sun,San Francisco 49ers,Dallas Cowboys,28,17,11
+2012,13,Sun,New York Jets,Arizona Cardinals,7,6,1
+2012,16,Sun,St. Louis Rams,Tampa Bay Buccaneers,28,13,15
+2015,2,Mon,New York Jets,Indianapolis Colts,20,7,13
+2014,9,Sun,Pittsburgh Steelers,Baltimore Ravens,43,23,20
+2014,1,Sun,Atlanta Falcons,New Orleans Saints,37,34,3
+2012,7,Sun,Green Bay Packers,St. Louis Rams,30,20,10
+2014,2,Sun,Dallas Cowboys,Tennessee Titans,26,10,16
+2015,14,Sun,St. Louis Rams,Detroit Lions,21,14,7
+2013,4,Sun,Arizona Cardinals,Tampa Bay Buccaneers,13,10,3
+2012,11,Sun,Green Bay Packers,Detroit Lions,24,20,4
+2013,6,Sun,St. Louis Rams,Houston Texans,38,13,25
+2013,10,Sun,Baltimore Ravens,Cincinnati Bengals,20,17,3
+2015,2,Sun,Cleveland Browns,Tennessee Titans,28,14,14
+2013,12,Sun,Dallas Cowboys,New York Giants,24,21,3
+2012,15,Sun,Minnesota Vikings,St. Louis Rams,36,22,14
+2012,15,Sun,Carolina Panthers,San Diego Chargers,31,7,24
+2012,8,Sun,Atlanta Falcons,Philadelphia Eagles,30,17,13
+2013,7,Sun,Pittsburgh Steelers,Baltimore Ravens,19,16,3
+2013,8,Sun,Green Bay Packers,Minnesota Vikings,44,31,13
+2015,9,Thu,Cincinnati Bengals,Cleveland Browns,31,10,21
+2013,1,Sun,Kansas City Chiefs,Jacksonville Jaguars,28,2,26
+2012,11,Sun,New York Jets,St. Louis Rams,27,13,14
+2015,14,Mon,New York Giants,Miami Dolphins,31,24,7
+2015,1,Sun,Dallas Cowboys,New York Giants,27,26,1
+2013,11,Thu,Indianapolis Colts,Tennessee Titans,30,27,3
+2014,3,Sun,Dallas Cowboys,St. Louis Rams,34,31,3
+2013,8,Mon,Seattle Seahawks,St. Louis Rams,14,9,5
+2012,12,Thu,New England Patriots,New York Jets,49,19,30
+2012,7,Sun,New Orleans Saints,Tampa Bay Buccaneers,35,28,7
+2013,5,Sun,Cincinnati Bengals,New England Patriots,13,6,7
+2013,16,Sun,New England Patriots,Baltimore Ravens,41,7,34
+2012,9,Sun,Indianapolis Colts,Miami Dolphins,23,20,3
+2015,6,Mon,Philadelphia Eagles,New York Giants,27,7,20
+2012,16,Sun,Carolina Panthers,Oakland Raiders,17,6,11
+2012,4,Sun,Houston Texans,Tennessee Titans,38,14,24
+2014,3,Sun,San Diego Chargers,Buffalo Bills,22,10,12
+2015,15,Sun,New England Patriots,Tennessee Titans,33,16,17
+2012,6,Thu,Tennessee Titans,Pittsburgh Steelers,26,23,3
+2015,13,Sun,New York Jets,New York Giants,23,20,3
+2012,8,Sun,Green Bay Packers,Jacksonville Jaguars,24,15,9
+2015,6,Sun,Carolina Panthers,Seattle Seahawks,27,23,4
+2015,15,Sun,Green Bay Packers,Oakland Raiders,30,20,10
+2014,13,Thu,Detroit Lions,Chicago Bears,34,17,17
+2014,15,Sun,Indianapolis Colts,Houston Texans,17,10,7
+2014,2,Sun,Houston Texans,Oakland Raiders,30,14,16
+2012,10,Sun,Tampa Bay Buccaneers,San Diego Chargers,34,24,10
+2013,15,Sun,Indianapolis Colts,Houston Texans,25,3,22
+2015,8,Sun,New Orleans Saints,New York Giants,52,49,3
+2015,8,Sun,Houston Texans,Tennessee Titans,20,6,14
+2014,7,Sun,Detroit Lions,New Orleans Saints,24,23,1
+2013,1,Sun,New Orleans Saints,Atlanta Falcons,23,17,6
+2013,12,Sun,San Diego Chargers,Kansas City Chiefs,41,38,3
+2012,3,Sun,Oakland Raiders,Pittsburgh Steelers,34,31,3
+2012,9,Sun,Houston Texans,Buffalo Bills,21,9,12
+2013,12,Sun,Tennessee Titans,Oakland Raiders,23,19,4
+2014,2,Sun,Buffalo Bills,Miami Dolphins,29,10,19
+2012,2,Sun,Houston Texans,Jacksonville Jaguars,27,7,20
+2013,5,Sun,St. Louis Rams,Jacksonville Jaguars,34,20,14
+2015,3,Sun,Pittsburgh Steelers,St. Louis Rams,12,6,6
+2012,5,Sun,San Francisco 49ers,Buffalo Bills,45,3,42
+2014,2,Sun,Denver Broncos,Kansas City Chiefs,24,17,7
+2013,11,Sun,Chicago Bears,Baltimore Ravens,23,20,3
+2013,8,Sun,New York Giants,Philadelphia Eagles,15,7,8
+2014,14,Sun,New England Patriots,San Diego Chargers,23,14,9
+2014,13,Sun,Jacksonville Jaguars,New York Giants,25,24,1
+2013,6,Sun,Philadelphia Eagles,Tampa Bay Buccaneers,31,20,11
+2013,15,Sun,Kansas City Chiefs,Oakland Raiders,56,31,25
+2013,10,Sun,New York Giants,Oakland Raiders,24,20,4
+2012,4,Sun,San Francisco 49ers,New York Jets,34,0,34
+2013,11,Sun,Philadelphia Eagles,Washington Redskins,24,16,8
+2013,11,Sun,Tampa Bay Buccaneers,Atlanta Falcons,41,28,13
+2012,8,Sun,Denver Broncos,New Orleans Saints,34,14,20
+2014,10,Sun,New York Jets,Pittsburgh Steelers,20,13,7
+2013,15,Sun,Green Bay Packers,Dallas Cowboys,37,36,1
+2012,14,Mon,New England Patriots,Houston Texans,42,14,28
+2014,10,Thu,Cleveland Browns,Cincinnati Bengals,24,3,21
+2012,4,Sun,Minnesota Vikings,Detroit Lions,20,13,7
+2015,14,Sun,Green Bay Packers,Dallas Cowboys,28,7,21
+2013,14,Sun,San Diego Chargers,New York Giants,37,14,23
+2014,1,Mon,Arizona Cardinals,San Diego Chargers,18,17,1
+2012,12,Thu,Houston Texans,Detroit Lions,34,31,3
+2012,4,Sun,Arizona Cardinals,Miami Dolphins,24,21,3
+2014,3,Sun,New York Giants,Houston Texans,30,17,13
+2013,13,Thu,Detroit Lions,Green Bay Packers,40,10,30
+2012,2,Sun,Philadelphia Eagles,Baltimore Ravens,24,23,1
+2015,11,Sun,Detroit Lions,Oakland Raiders,18,13,5
+2014,10,Sun,Seattle Seahawks,New York Giants,38,17,21
+2012,15,Sun,Houston Texans,Indianapolis Colts,29,17,12
+2014,3,Sun,New Orleans Saints,Minnesota Vikings,20,9,11
+2013,13,Mon,Seattle Seahawks,New Orleans Saints,34,7,27
+2013,13,Sun,Denver Broncos,Kansas City Chiefs,35,28,7
+2014,15,Sun,Pittsburgh Steelers,Atlanta Falcons,27,20,7
+2014,15,Sun,Cincinnati Bengals,Cleveland Browns,30,0,30
+2013,12,Sun,Baltimore Ravens,New York Jets,19,3,16
+2013,10,Mon,Tampa Bay Buccaneers,Miami Dolphins,22,19,3
+2012,2,Mon,Atlanta Falcons,Denver Broncos,27,21,6
+2013,17,Sun,Philadelphia Eagles,Dallas Cowboys,24,22,2
+2015,7,Sun,St. Louis Rams,Cleveland Browns,24,6,18
+2015,5,Sun,Denver Broncos,Oakland Raiders,16,10,6
+2013,8,Sun,New Orleans Saints,Buffalo Bills,35,17,18
+2014,2,Sun,San Diego Chargers,Seattle Seahawks,30,21,9
+2015,11,Sun,Seattle Seahawks,San Francisco 49ers,29,13,16
+2014,10,Sun,San Francisco 49ers,New Orleans Saints,27,24,3
+2015,1,Sun,Kansas City Chiefs,Houston Texans,27,20,7
+2014,3,Sun,Kansas City Chiefs,Miami Dolphins,34,15,19
+2013,2,Sun,Atlanta Falcons,St. Louis Rams,31,24,7
+2014,9,Sun,Philadelphia Eagles,Houston Texans,31,21,10
+2013,1,Sun,Indianapolis Colts,Oakland Raiders,21,17,4
+2013,1,Sun,Tennessee Titans,Pittsburgh Steelers,16,9,7
+2015,1,Sun,St. Louis Rams,Seattle Seahawks,34,31,3
+2014,11,Sun,San Diego Chargers,Oakland Raiders,13,6,7
+2015,12,Sun,Seattle Seahawks,Pittsburgh Steelers,39,30,9
+2013,14,Thu,Jacksonville Jaguars,Houston Texans,27,20,7
+2013,5,Sun,Kansas City Chiefs,Tennessee Titans,26,17,9

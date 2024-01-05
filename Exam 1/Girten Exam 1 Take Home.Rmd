@@ -1,0 +1,361 @@
+---
+title: "Exam 1 - Take Home"
+name: "Scott Girten"
+date: "February 27, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The take home portion of Exam 1 will be submitted via Canvas as an R Markdown file. Any question requiring a hypothesis test should include the following structure: 
+
+* Define the parameters of interest and state the hypotheses to be tested. 
+* Define the test statistic used to test the claim. 
+* Simulate the null distribution of the test statistic, including a histogram of the distribution with the observed test statistic identified. 
+* Calculate the p-value of the test. 
+* Report a conclusion for the test. 
+
+*******
+
+### Problem 1
+
+A local administrator wants to compare the starting salaries for teachers in Kentucky and Ohio. A sample of 40 KY teachers is taken and each is asked to report their current salary. Similarly, a sample of 55 OH teachers is taken and asked the same question. The data obtained is posted in a .csv file on Canvas. 
+
+* Because salaries for starting teachers were not collected, the administrator chooses to compare the first quartile for the two states (thinking this would be representative of a starting salary). Conduct a permutation test at the 0.10 level to determine if the first quartile for OH teacher salaries is significantly greater than that of KY teacher salaries. (10 points)
+
+$\underline{\textbf{Parameters and Hypothesis Test}}$
+
+> $Q_{1(OH)} = First Quartile for Ohio teachers$
+>
+> $Q_{1-KY} = First Quartile for Kentucky teachers$
+>
+> $H_0: Q_{1(OH)} = Q_{1(KY)}$ 
+>
+> $H_A: Q_{1(OH)} > Q_{1(KY)}$
+>
+> $\alpha = 0.10$
+
+$\underline{\textbf{Test Statistic}}$
+
+> $T(X) = Q_{1(OH)} - Q_{1(KY)}$
+
+```{r first_Quartile_ts, message=FALSE, warning=FALSE}
+library(tidyverse)
+salaries = read_csv("salary.csv")
+
+# Create vectors for OH and KY salaries
+salaries.OH = filter(salaries, State == "OH") %>% select(Salary)
+salaries.KY = filter(salaries, State == "KY") %>% select(Salary)
+
+# Calculate first quantile for OH and KY
+q1.OH = quantile(salaries.OH$Salary, probs = 0.25)
+q1.KY = quantile(salaries.KY$Salary, probs = 0.25)
+
+q1.obs.ts = q1.OH - q1.KY
+
+```
+
+The observed test statistic $T(X) = Q_{1(OH)} - Q_{1(KY)}$ = `r {q1.obs.ts}`
+
+$\underline{\textbf{The Null Distribution of T(X) and the observed test statistic}}$
+
+```{r first_Quartile_nullDistn, message=FALSE, warning=FALSE}
+
+# Create vector for storing simulated test statistic
+q1.simulated.ts = numeric(9999)
+
+for (i in 1:9999){
+  # Create vecotor of indicies (representing Ohio) for sampling without replacement randomly from salaries, then calculate simulated test statistic
+  index = sample(95, 55, replace = F )
+  q1.simulated.ts[i] = quantile(salaries$Salary[index], probs = 0.25) - quantile(salaries$Salary[-index], probs = 0.25) 
+}
+
+hist(q1.simulated.ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic: Q1(OH) - Q1(KY)")
+abline(v = q1.obs.ts, col="blue", lwd = 3)
+
+q1.pvalue = sum(q1.simulated.ts >= q1.obs.ts + 1) / 10000
+
+```
+
+**Conclusion:** The p-value for the hypothesis test is `r {q1.pvalue}`.  A p-value of `r {q1.pvalue}` suggests that the data collected would be unlikely to occur if the null hypothesis is true.   At a 0.10 level of significance, there is evidence to reject the null hypothesis and conclude that the first quartile of Ohio teachers salary is greater than the first quartile of Kentucky teachers salary.
+
+
+
+* If the sample sizes for the two states were doubled, what effect, if any, would this have on your null distribution? Explain by discussing both the center and spread of the distribution. (4 points)
+
+> Doubling the sample size for the two states would not affect the center of the null distribution.  This particular distribution would still be centered at 0.  However the variability, or spread, of the distribution would decrease as the sample size increases.  
+
+
+* Create the kernel density estimate of the underlying distribution of salaries for the two states. Plot the curves in the same plotting window. Propose a statistic appropriate for this data which can be used to test for equal variability. Explain the statistic you chose; discuss where the null distribution will center and what values of the statistic would support unequal variability. (6 points)
+
+```{r kde_salary, warning=FALSE}
+par(new=T)
+
+plot(density(salaries.OH$Salary, kernel = "gaussian", bw = sd(salaries.OH$Salary)/sqrt(length(salaries.OH$Salary))), main = "Comparison of Teacher Salaries in Ohio and Kentucky", sub = "Kernel Density Estiamte", xlim=c(35000, 45000), ylim=c(0, 0.0005), col="red", lwd=2)
+
+par(new=T)
+plot(density(salaries.KY$Salary, kernel = "gaussian", bw=sd(salaries.KY$Salary)/sqrt(length(salaries.KY$Salary))), main = "", sub = "", xlim=c(35000, 45000), ylim=c(0, 0.0005), col="blue", lwd=2)
+
+
+```
+
+>A test statistic which could be used to test for equal variability would be the difference of the standard deviations for each population: $T(X) = SD_{OH} - SD_{KY}$. The most direct way of testing for equal variances would be to test for a difference in the sum of the variances for the samples.  Since the samples for Ohio and Kentucky are not the same size, standardizing the variances is neccessary making the choice of using the standard deviation intuitive.  Taking a difference of the standard deviations would provide for a consistent way to determine if the variance is the same for each population.  For variances that are approximately equal the null distribution should be centered around 0.  Large values, either positive or negative, would provide evidence that the variances of the populations are not equal.     
+
+* Conduct a permutation test at the 0.10 level to determine if there is a significant difference in the variability among the salaries for the two states using the statistic you selected in the previous question. (10 points)
+
+$\underline{\textbf{Parameters and Hypothesis Test}}$
+
+> $SD_{OH} = Standard Deviation for Ohio teachers salary$
+>
+> $SD_{KY} = Standard Deviation for Kentucky teachers salary$
+>
+> $H_0: SD_{OH} = SD_{KY}$
+>
+> $H_A: SD_{OH} \ne SD_{KY}$
+>
+> $\alpha = 0.10$
+
+$\underline{\textbf{Test Statistic}}$
+
+> $T(X) = SD_{OH} - SD_{KY}$
+
+```{r sd_diff_observed}
+# Observed test statistic
+sd.diff.obs.ts = sd(salaries.OH$Salary) - sd(salaries.KY$Salary)
+
+```
+
+The observed test statistic $T(X) = SD_{OH} - SD_{KY}$ = `r {sd.diff.obs.ts}`
+
+$\underline{\textbf{The Null Distribution of T(X) and the observed test statistic}}$
+
+```{r sd_diff_nullDistn}
+# Vector for simulated test statistic
+sd.diff.sim.ts = numeric(9999)
+
+for (i in 1:9999){
+  index = sample(95, 55, replace = F)
+  sd.diff.sim.ts[i] = sd(salaries$Salary[index]) - sd(salaries$Salary[-index])
+}
+
+hist(sd.diff.sim.ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic SD(OH) - SD(KY)")
+abline(v = sd.diff.obs.ts, col = "green", lwd = 3)
+
+sd.diff.pvalue = sum(sd.diff.sim.ts >= sd.diff.obs.ts + 1) / 10000
+
+```
+
+**Conclusion:** The p-value for the hypothesis test is `r {sd.diff.pvalue}`.  A p-value of `r {sd.diff.pvalue}` suggests that the data collected would be likely to occur if the null hypothesis is true.  Stated more simply, there is evidence to support the null hypothesis and assume that the variability of Ohio teachers salary and Kentucky teachers salary are  approximately equal. 
+
+
+### Problem 2
+
+In class we considered the data collected from the Mythbusters' experiment investigating contagious yawning. When investigating this myth, the hosts concluded their data confirmed the myth, which we found to be statistically incorrect. 
+
+Suppose that they plan to repeat the experiment but would like input on the sample size which should be used. Using the results from their initial experiment as a starting point, they would like to plan a similar experiment but with a sample size large enough to detect a difference of 4.41% between the two groups in yawning percentages (the difference found in the original experiment). 
+
+* The following code has been written to generate the power for a sample size of 50 individuals split into a seeded and unseeded group as described in the original experiment. Provide a thorough explanation for the code - think about explaining each line of code and then form this into a cohesive description. Your explanation should not simply state what the function being used does, but it should explain the process being completed in the *context of this problem*. (5 points)
+
+    + In the Mythbusters example, the sample size for the experiment was too small to detect a difference in the two samples.  The code below conducts a power analysis to determine the sample size needed to detect a difference between the two samples.  First, samples for both the seeded and control groups are generated using the proportions observed in the Mythbusters example of people who yawned in each group.  Then an observed test statistic is calculated by taking the difference in proportions of people who yawned in seeded group minus the proportion of people who yawned in the control group.  The permutation test is then conducted in order to calculate the power of the experiment.  The permutation test begins by creating a table of the combined observations for both groups 9,999 times.  Next, from the combined observations, random samples are drawn for both the seeded and the control group.  The proportion of people yawning are then calculated for both groups using the samples that were drawn from the combined data.  To construct a null distribution the differences of the two proportions is calculated for each permutation.  A p-value is then calculated for each permutation by counting the number of instances where the null distribution value was greater than the observed test statistic.  The power of the statistic is then calculated by counting the number of p-values which were less than or equal to the significance level.  
+
+```{r yawn_power}
+# Create function to call for calculating power
+mb_power = function(size){
+
+  pvalue <- numeric(500)
+  # From the original experiment, roughly 2 people in seeded group and 1 person in the control.  Used   34/50 = .68 for the seeded and 16/50 = .32 for the control group to try to precisely reflect the      original experiment
+  seed_size = size*.68
+  control_size = size*.32
+  
+  for(i in 1:500){
+    yawn_s <- rbinom(seed_size, 1, 0.29412)
+    yawn_c <- rbinom(control_size, 1, 0.25)
+    obs_ts <- sum(yawn_s)/seed_size - sum(yawn_c)/control_size
+    
+    permutation <- replicate(9999, sample(c(yawn_s, yawn_c), size))
+    
+    null_distn <- apply(permutation[1:seed_size,],2,sum)/seed_size - apply(permutation[(seed_size+1):size,],2,sum)/control_size
+    
+    pvalue[i] <- (sum(null_distn >= obs_ts)+1)/10000
+  }
+  
+  sum(pvalue <= 0.05)/500
+}
+
+# Calculate power for each sample size
+power.n50 = mb_power(50)
+power.n250 = mb_power(250)
+power.n500 = mb_power(500)
+power.n750 = mb_power(750)
+power.n1000 = mb_power(1000)
+power.n1500 = mb_power(1500)
+power.n3000 = mb_power(3000)
+power.n5000 = mb_power(5000)
+
+# Create data frame of sample size and the associated power
+size = c(50, 250, 500, 750, 1000, 1500, 3000, 5000)
+powr = c(power.n50, power.n250, power.n500, power.n750, power.n1000, power.n1500, power.n3000, power.n5000)
+
+power.df = data.frame(size, powr)
+
+power.plot = ggplot(power.df, aes(x = size, y = powr)) + geom_point() + geom_line() + ggtitle('MythBusters Example Power Curve') + xlab('Sample Size') + ylab('Power') + ylim(0, 1) + geom_hline(yintercept = 0.8, color = 'blue')
+
+#library(plotly)
+plotly::ggplotly(power.plot)
+
+```
+
+* Make modifications to the above code to calculate the power using 500 replications for the following **total** sample sizes: 50, 250, 500, 750, 1000, 1500, 3000, 5000. Assume the split between the individual sampled will follow the same pattern as described in the study (2 individuals to the seeded group; 1 to the unseeded). Create a well-labeled power curve with the sample size along the x-axis and the power estimate along the y-axis by plotting the ordered pairs and connecting the points with line segments. You can use the R functions plot() and points() to create this graph. Fill in the table below with the sample sizes in each group, as well as the calculated power. (10 points)
+
+Total Sample Size | # Assigned to Seeded Group | # Assigned to Control Group | Power
+--------|--------|--------|--------
+50  |34 | 16  | `r power.n50`
+250 |170| 80  | `r power.n250`
+500 |340| 160 | `r power.n500`
+750 |510| 240 | `r power.n750`
+1000|680|320  | `r power.n1000`
+1500|1,020| 480 | `r power.n1500`
+3000|2,040| 960 | `r power.n3000`
+5000|3,400|1,600| `r power.n5000`
+
+* Using the power curve from part b, what total sample size would you recommend to Mythbusters in order to achieve a power of 80%? Use mathematical techniques to arrive at an answer - don't just ballpark an estimate. How many individuals will be in each group - seeded & unseeded? (5 points)
+
+```{r recommend_sample_size}
+# Calculate slope and intercept for the line connecting 3000 and 5000 samples
+slope = (power.n3000 - power.n5000) / (3000 - 5000) 
+intercept = power.n3000 - slope*3000
+
+recommend = (0.8 - intercept) / slope
+
+seed.num = round(recommend*0.68)
+control.num = round(recommend*.32)
+
+```
+
+  + Using the power curve from part B, I would recommend MythBusters to use a sample size of `r {recommend}` if they were to conduct the experiment again to achieve a power of 80%.  Using a sample of this size there would be approximately `r {seed.num}` in the seeded group and `r {control.num}` in the control group.
+
+* The experimental design used by the show has been questioned by some who believe it would have been advantageous to use equal sample sizes for the seeded and unseeded groups. Generate a power curve (similar to what was obtained above) using a design with equal sample sizes in the seeded and unseeded groups. Comment on whether this design would be better than what was originally used on the show. 	(10 points)
+
+```{r yawn_power_equal}
+# Create function to call for calculating power
+mb_power_eqSize = function(size){
+
+  pvalue <- numeric(500)
+  # From the original experiment, roughly 2 people in seeded group and 1 person in the control.  Used   34/50 = .68 for the seeded and 16/50 = .32 for the control group to try to precisely reflect the      original experiment
+  seed_size = size*.5
+  control_size = size*.5
+  
+  for(i in 1:500){
+    yawn_s <- rbinom(seed_size, 1, 0.29412)
+    yawn_c <- rbinom(control_size, 1, 0.25)
+    obs_ts <- sum(yawn_s)/seed_size - sum(yawn_c)/control_size
+    
+    permutation <- replicate(9999, sample(c(yawn_s, yawn_c), size))
+    
+    null_distn <- apply(permutation[1:seed_size,],2,sum)/seed_size - apply(permutation[(seed_size+1):size,],2,sum)/control_size
+    
+    pvalue[i] <- (sum(null_distn >= obs_ts)+1)/10000
+  }
+  
+  sum(pvalue <= 0.05)/500
+}
+
+# Calculate power for each sample size
+power2.n50 = mb_power_eqSize(50)
+power2.n250 = mb_power_eqSize(250)
+power2.n500 = mb_power_eqSize(500)
+power2.n750 = mb_power_eqSize(750)
+power2.n1000 = mb_power_eqSize(1000)
+power2.n1500 = mb_power_eqSize(1500)
+power2.n3000 = mb_power_eqSize(3000)
+power2.n5000 = mb_power_eqSize(5000)
+
+# Create data frame of sample size and the associated power
+size2 = c(50, 250, 500, 750, 1000, 1500, 3000, 5000)
+powr2 = c(power2.n50, power2.n250, power2.n500, power2.n750, power2.n1000, power2.n1500, power2.n3000, power2.n5000)
+
+power2.df = data.frame(size2, powr2)
+
+power2.plot = ggplot(power2.df, aes(x = size2, y = powr2)) + geom_point() + geom_line() + ggtitle('MythBusters Example Power Curve - Equal Sample Size') + xlab('Sample Size') + ylab('Power') + ylim(0, 1) + geom_hline(yintercept = 0.8, color = 'blue')
+
+
+plotly::ggplotly(power2.plot)
+
+```
+
+
+Total Sample Size | # Assigned to Seeded Group | # Assigned to Control Group | Power
+--------|--------|--------|--------
+50  |25 | 25 | `r {power2.n50}`
+250 |125| 125| `r {power2.n250}`
+500 |250| 250| `r {power2.n500}`
+750 |375| 375| `r {power2.n750}`
+1000|500| 500| `r {power2.n1000}`
+1500|750| 750| `r {power2.n1500}`
+3000|1500|1500| `r {power2.n3000}`
+5000|2500|2500| `r {power2.n5000}`
+
+Conducting an experiment in which each group has equal sample sizes would result in a more powerful experiment.  Using this approach would allow for the same amount of power to be generated with fewer samples.  
+
+### Problem 3
+
+Is there a difference in the price of groceries sold by Target and Wal-Mart? The data posted in the .csv file on Canvas contains a sample of grocery items and their prices advertised on their respective web sites on one specific day. 
+
+* Explain why this is an example of matched pairs data, not two independent samples. (2 points)
+
+    +The price of groceries at Target and Wal-Mart is an example of dependent samples because both companies will monitor their competitor's prices and will change their price of a product to reflect changes in their competitors prices.  The prices of groceries at both companies are not independently set by the company, rather prices of groceries are determined by the wholesale cost of the grocery plus the price competitors are willing to charge for the same product.
+
+* When the data is dependent, inferences are conducted on the differences between observations. However, when the prices from the two stores are subtracted, we are left with a single vector of values. Using the steps below, conduct a hypothesis test to determine if there is a difference in the mean price of items at the two stores using a significance level of 0.10.  (8 points)
+
+    + Define the test statistic to be $\bar{Y}_d = \text{sample mean difference in prices}$
+    + If the null is true and there is no difference in the mean prices at the two locations, than the price for an item at Target could have been observed at Wal-Mart on a different day. This means the sign (positive or negative) assigned to the differences can be treated as random. Generate a random sample of size n from the vector c(-1,1). In this case, you'll want to use replace=T in the sample() function. 
+    + Multiply the randomly sampled signs by the vector of differences and calculate the test statistic. 
+    + Repeat this process 9999 times to construct the null distribution.
+
+$\underline{\textbf{Parameters and Hypothesis Test}}$
+
+> $Price_{T} = Price of Target grocery$
+>
+> $Price_{WM} = Price of Wal-Mart grocery$
+>
+> $H_0: Price_T = Price_{WM}$
+>
+> $H_A: Price_T \ne Price_{WM}$
+>
+> $\alpha = 0.10
+
+$\underline{\textbf{Test Statistic}}$
+
+> $\bar{Y}_d = \frac{\sum (Price_T - Price_{WM})}{number of grocery items compared}$
+
+
+$\underline{\textbf{Null Distribution}}$
+
+```{r target_walmart_nullDistn, message=FALSE, warning=FALSE}
+# Read in Groceries data
+groceries = read_csv("Groceries.csv")
+
+# Calculate the difference in the observed prices, then calculate the mean of the difference to find the value of the observed test stastitic
+groc.diff.obs = groceries$Target - groceries$Walmart
+groc.obs.ts = mean(groc.diff.obs)
+
+groc.sim.ts = numeric(9999)
+
+for (i in 1:9999){
+  sign = sample(c(-1, 1), 30, replace = T)
+  groc.diff.sim = sign * groc.diff.obs
+  groc.sim.ts[i] = mean(groc.diff.sim)
+  
+}
+
+hist(groc.sim.ts, main = "Null Distribution of Y-bar", xlab = "Simulated Test Statistic Price(T) - Price(WM)")
+abline(v=groc.obs.ts, col="purple", lwd=3)
+
+groc.pvalue = (sum(groc.sim.ts >= groc.obs.ts) + 1) / 10000
+```
+
+**Conclusion:**  The p-value for the hypothesis test is `r {groc.pvalue}`.  A p-value of `r {groc.pvalue}` suggests that the data collected would be likely to occur if the null hypothesis is true.  At a 0.10 level of significance, there is evidence to support the null hypothesis and assume that the prices for groceries at Target is approximately equal to the prices of groceries at Wal-Mart.  
+    
+    
+

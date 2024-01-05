@@ -1,0 +1,230 @@
+---
+title: "Homework 3 - Simulating Sampling Distributions"
+author: "Scott Girten"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Homework 3  {.tabset}
+
+### Problem 1
+
+Complete problem 4.25 in the textbook (the problem deals with the sampling distribution of the sample median when samples are selected from an Exponential population). 
+
+**Part A**
+
+The median of the exponential distribution is where the pdf equals 0.5
+
+> $pdf(x) = (1/20)e^{-x/20}$
+>
+> $(1/20)e^{-x/20} = 0.5$
+>
+> $x = -20ln(0.5)$
+>
+> $x =  `r -20*log(0.5)`$
+
+*****
+
+**Part B**
+```{r part_B}
+exp.random.sample = rexp(50, rate = 1/20)
+
+exp.mean = mean(exp.random.sample)
+exp.sd = mean(exp.random.sample)
+
+
+```
+The mean of the sample from the exponential distribution is `r exp.mean` and the standard deviation is `r exp.sd`
+
+*****
+
+**Part C**
+
+
+```{r exp_distn_function}
+# function for simulating the median of the  exponential distributon 
+exp.distn.median = function( n ){
+
+  exponential.samples = replicate(10000, rexp( n, rate = 1/20))
+  return (apply(exponential.samples, 2, median))
+}
+
+exp.sample50.median = exp.distn.median(50)
+hist(exp.sample50.median, main = "Histogram of Distn of Sample Median")
+
+exp.sample50.mean = mean(exp.sample50.median)
+exp.sample50.sd = sd(exp.sample50.median)
+
+```
+
+The sampling distribution has a mean of `r exp.sample50.mean` and the has a standard deviation of `r exp.sample50.sd`.
+
+*****
+
+**Part D**
+
+```{r part_D}
+# Create a sampling distribution for the given sample sizes
+exp.sample100.median = exp.distn.median(100)
+exp.sample500.median = exp.distn.median(500)
+exp.sample1000.median = exp.distn.median(1000)
+
+# Mean of the sampling distribution
+exp.sample100.mean = mean(exp.sample100.median)
+exp.sample500.mean = mean(exp.sample500.median)
+exp.sample1000.mean = mean(exp.sample1000.median)
+
+# Standard deviaton of the sampling distribution
+exp.sample100.sd = sd(exp.sample100.median)
+exp.sample500.sd = sd(exp.sample500.median)
+exp.sample1000.sd = sd(exp.sample1000.median)
+
+```
+
+Sample Size | Mean       | Standard Deviation
+------------|------------|------------------
+50          | `r exp.sample50.mean ` | `r exp.sample50.sd`
+100         | `r exp.sample100.mean` | `r exp.sample100.sd`
+500         | `r exp.sample500.mean` | `r exp.sample500.sd`
+1000        | `r exp.sample1000.mean` | `r exp.sample1000.sd`
+
+
+As the sample size increases, the mean of the sampling distribution of the median approaches the median of the exponential distribution and the standard deviation of the sampling distribution of the median decreases.
+
+### Problem 2
+
+Let $X_1, X_2, ..., X_n$ be a random sample from a standard normal population ($\mu=0$, $\sigma=1$). Let $W = X_1^2 + X_2^2 + ... + X_n^2$. Describe the sampling distribution of W by running a simulation using $n=2$. What is the mean and variance of the sampling distribution of W? Repeat using $n=4, n=5,$ and $n=15$. What conjectures do you have about the mean and variance of the sampling distribution of W for general $n$?
+
+```{r problem_2}
+# function for simulating the a sample from a normal distribution
+norm.dist.sim = function( n ){
+  return (replicate(10000, rnorm( n, mean = 0, sd = 1)))
+}
+
+# Sample size 2
+norm.sample2 = norm.dist.sim(2)
+norm.sample2.mean = mean(norm.sample2)
+
+# I tried to calculate the variance with the var() function and I generated a large matrix with that function and didn't really know what I was doing wrong, so I just squared the sd to get the variance
+
+#norm.sample2.var = var(norm.sample2)
+norm.sample2.var = sd(norm.sample2)^2
+
+# Sample sizes 4, 5 and 15
+norm.sample4 = norm.dist.sim(4)
+norm.sample5 = norm.dist.sim(5)
+norm.sample15 = norm.dist.sim(15)
+
+norm.sample4.mean = mean(norm.sample4)
+norm.sample5.mean = mean(norm.sample5)
+norm.sample15.mean = mean(norm.sample15)
+
+norm.sample4.var = sd(norm.sample4)^2
+norm.sample5.var = sd(norm.sample5)^2
+norm.sample15.var = sd(norm.sample15)^2
+
+
+```
+
+Sample Size | Mean      | Variance
+------------|-----------|-------------
+2           | `r norm.sample2.mean` | `r norm.sample2.var`
+4           | `r norm.sample4.mean` | `r norm.sample4.var`
+5           | `r norm.sample5.mean` | `r norm.sample5.var`
+15          | `r norm.sample15.mean` | `r norm.sample15.var`
+
+**Conjecture:** For the sampling distribution of W, as the sample size (n) increases the mean of the sampling distribution will become closer to 0 and the variance of W will be approximately 1 regardless of the sample size.
+
+
+
+
+
+
+
+
+### Problem 3
+
+When we took samples from a Uniform population, we proposed various statistics statistics which were viable candidates for estimating the mean:  
+
+* sample mean
+
+* sample median
+
+* $\frac{\text{min}+\text{max}}{2}$
+
+* $\frac{Q1+Q3}{2}$
+
+* IQR + min
+
+These same statistics could be used to estimate the mean of *any* symmetric distribution. Let's investigate properties of these estimators for the following two symmetric populations: normal distribution ($\mu=15$, $\sigma=2$) and t distribution (df = 10).  
+
+a. Repeat the simulation process used in class to fill in the tables below for each of the two distributiosn using samples of size 15 observations from the two populations. 
+
+```{r norm_distn_sim}
+# Normal distribution
+norm.samples = replicate(10000, rnorm(15, mean = 15, sd = 2))
+
+norm.mean = apply(norm.samples, 2, mean)
+norm.median = apply(norm.samples, 2, median)
+norm.midrange = (apply(norm.samples, 2, min) + apply(norm.samples, 2, max)) / 2
+norm.IQR = (apply(norm.samples, 2, quantile, probs = 0.25) + apply(norm.samples, 2, quantile, probs = 0.75)) / 2
+norm.IQR.min = norm.IQR + apply(norm.samples, 2, min)
+
+par(mfrow=c(2,3))
+
+hist(norm.mean, main = "Distn of Sample Mean")
+hist(norm.median, main = "Distn of Sample Median")
+hist(norm.midrange, main = "Distn of Sample Midrange")
+hist(norm.IQR, main = "Distn of Sample IQR")
+hist(norm.IQR.min, main = "Distn of Sample IQR + Min")
+
+```
+
+**Normal Population, $\mu = 15, \sigma=2$**
+
+Estimator | Sampling Distn Shape | Mean | Std. Error
+----------|----------|------|------
+Sample Mean | Symmetric, bell-shaped | `r mean(norm.mean)` | `r sd(norm.mean)` 
+Sample Median | Symmetric, bell-shaped | `r mean(norm.median)` | `r sd(norm.median)` 
+(min+max)/2 | Symmetric, bell-shaped | `r mean(norm.midrange)` | `r sd(norm.midrange)` 
+(Q1+Q3)/2 | Symmetric, bell-shaped | `r mean(norm.IQR)` | `r sd(norm.IQR)` 
+IQR + min | Symmetric, bell-shaped | `r mean(norm.IQR.min)` | `r sd(norm.IQR.min)`
+
+```{r t_distn_sim}
+# t distribution
+t.samples = replicate(10000, rt(15, df = 10))
+
+t.mean = apply(t.samples, 2, mean)
+t.median = apply(t.samples, 2, median)
+t.midrange = (apply(t.samples, 2, min) + apply(t.samples, 2 , max)) / 2
+t.IQR = (apply(t.samples, 2, quantile, probs = 0.25) + apply(t.samples, 2, quantile, probs = 0.75)) / 2
+t.IQR.min = t.IQR + apply(t.samples, 2, min)
+
+par(mfrow=c(2,3))
+
+hist(t.mean, main = "Distn of Sample Mean")
+hist(t.median, main = "Distn of Sample Median")
+hist(t.midrange, main = "Distn of Sample Midrange")
+hist(t.IQR, main = "Distn of Sample IQR")
+hist(t.IQR.min, main = "Distn of Sample IQR + Min")
+```
+
+
+**T Population, df = 10**
+
+Estimator | Sampling Distn Shape | Mean | Std. Error
+----------|----------|------|------
+Sample Mean | Symmetric, bell-shaped | `r mean(t.mean)` | `r sd(t.mean)` 
+Sample Median | Symmetric, bell-shaped | `r mean(t.median)` | `r sd(t.median)` 
+(min+max)/2 | Symmetric, bell-shaped | `r mean(t.midrange)` | `r sd(t.midrange)` 
+(Q1+Q3)/2 | Symmetric, bell-shaped | `r mean(t.IQR)` | `r sd(t.IQR)` 
+IQR + min | Left-skewed | `r mean(t.IQR.min)` | `r sd(t.IQR.min)` 
+        
+b. Comment on which of the estimators is optimal for estimating the mean of each population. Fully justify your choice.
+
+    + **Normal Population:**  To estimate the mean of the normal population, the sample mean provides the best estimate.  With the exception of the IQR + min statistic, the 4 other statistics are all centered at the true mean of the population.  Of the 4 statistics centered at the true mean, the sample mean has the smallest standard error and provides for the most precise estimate of the true mean of the population.
+    
+    + **T Population:**  To estimate the mean of the t population, the sample median provides the best estimate.  The sample median provides the most accurate estimate of the true mean of 0 compared to the other 4 statistics.  While the standard error of the sample median is slightly larger than the standard error of the sample mean and the sample IQR, the fact that the sample median is more accurate than either of the sample mean or sample IQR and has comparable precision relative to those two statistics makes the sample median the best estimator.

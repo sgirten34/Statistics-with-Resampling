@@ -1,0 +1,268 @@
+---
+title: "Module 4 - Sampling Distributions"
+author: "Buckley"
+date: "February 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### What is a sampling distribution? 
+
+**Definition:** Let $Y_1, Y_2, ..., Y_n$ be a random sample from some population and let $\hat{\theta} = T(Y)$ denote some statistic calculuated from the sampled observations. The sampling distribution of $\hat{\theta}$ is its probability distribution. In other words, a sampling distribution is the distribution of the statistic over all possible samples of size *n* selected from the population. 
+
+What sampling distributions are you familiar with? 
+
+* Sampling distribution of $\bar{Y}$ - we've discussed this sampling distribution due to its connection to the Central Limit Theorem
+
+* Sampling distribution of $\hat{P}$
+
+Generally, we are interested in the following charachteristic of a sampling distribution:
+
+* shape of the sampling distribution
+
+* mean of the sampling distribution - mean of the statistic calculated from repeated samples from the population of interest.
+
+* spread of the sampling distribution - The standard deviation of a sampling distribution is called its **standard error**.  This value estimates the variability in the value of a statistic from sample-to-sample.  We'll use the notation $SE(\hat{\theta})$.  If the standard error is estimated, we use the notation $\hat{SE}(\hat{\theta})$
+
+There are 3 basic approaches for sampling distributions:
+
+1. Exact calculations - The mice example we discussed on the first day of class was an example of the exact calculation of a sampling distribution.  The sample size was small enough that all possible permutations could be listed, and the statistic for each of those possibilities was calculated.  
+
+2. Simulation - this will be our major focus
+
+3. Formula approximations - when you've discussed the sampling distribution of the sample proportion, a formula approximation has been used.  The formulas for the mean and standard error of the distribution were exact, but the use of a normal model was an approximation.  
+
+**Example**: Let $Y_1, Y_2, ...., Y_{15} \stackrel{\text{iid}}{\sim} \text{Uniform(0,10)}$.  The use of *iid* implies that the 15 observations from the Uniform distribution are independent and identically distributed - this is another way of saying the sample of observations is random.  We know that $E(Y_i) = \frac{10+0}{2} = 5$ and $Var(Y_i) = \frac{(10-0)^2}{12} = \frac{25}{3}$.
+
+Suppose we are interested in statistics that could be used to estimate the mean.  What statistics could be used?
+
+* Sample mean, $\hat{\theta} = \bar{Y}$
+
+* Sample median $\hat{\theta} = \tilde{Y}$
+
+* Sample midrange, $\hat{\theta} = \frac{\text{min} + \text{max}}{2}$
+
+* Sample mid-innerquartile range = $\hat{\theta} = \frac{\text{Q_1 + Q_3}}{2}$
+
+While we could use the CLT to discuss properties of the first estimator, we don't have anything comparable for the last 3 statistics.  In order to discusss the sampling distributions of these statistics, we can use simulation:
+
+```{r uniform_samplingDistn}
+#First, we need to generate lots of samples of size 15 from the Uniform population:
+
+uniform.samples = replicate(10000, runif(15, min=0, max=10))
+
+# how to use apply function: apply( data, 1=row/2=column, statistic)
+sample.mean = apply(uniform.samples, 2, mean)
+
+sample.median = apply(uniform.samples, 2, median)
+
+sample.midrange = (apply(uniform.samples, 2, max) + apply(uniform.samples, 2, min)) / 2
+
+sample.midIQR = (apply(uniform.samples, 2, quantile, probs=0.25) + apply(uniform.samples, 2, quantile, probs=0.75)) / 2
+
+par(mfrow=c(2,2))
+
+hist(sample.mean, main = "Distn of Sample Mean")
+hist(sample.median, main = "Distn of Sample Median")
+hist(sample.midrange, main = "Distn of Sample Midrange")
+hist(sample.midIQR, main = "Distn of Sample MidIQR")
+```
+
+Statistic | Shape of the Sampling Distn | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------------------------|-------------------------|---------------|----------------
+Sample Mean | Symmetric, bell-Shaped | `r mean(sample.mean)` | `r sd(sample.mean)`
+Sample Median | Symmetric, bell-shaped | `r mean(sample.median)` | `r sd(sample.median)`
+Sample Midrange | Symmetric, bell-shaped | `r mean(sample.midrange)` | `r sd(sample.midrange)`
+Sample MidIQR | Symmetric, bell-shaped | `r mean(sample.midIQR)` | `r sd(sample.midIQR)`
+
+What patterns do you observe?
+
+* All of the distributions were roughly symmetric and centered over the population mean, $\mu$, of 5.  Because the mean of each sampling distribution is equal (approximately) to the population parameter we were attempting to estimate, we say each of the statistics is **unbiased** for the mean.  
+
+ Theory tells us $Var(\bar{Y}) = \frac{\sigma ^2}{n} = \frac{(10-0)^2}{12}\frac{1}{15}$ = `r 10^2/12*1/15`.  The estimated standard error of the sample mean was very close to the square root of this value.  The estimated standard error of the median is larger than this value, while the estimated standard error of the midrange is smaller.
+ 
+* If we were choosing a statistic to estimate the mean of the Uniform distribution, it seems as though the midrange would be our best choice.  On average, we expect to observe a value of 5, and this statistic has the least variability from this value.
+
+What will happen to the sampling distributions of the statistics if the sample size is increased to 50 observations?
+
+```{r}
+#First, we need to generate lots of samples of size 50 from the Uniform population:
+
+uniform.samples = replicate(10000, runif(50, min=0, max=10))
+
+# how to use apply function: apply( data, 1=row/2=column, statistic)
+sample.mean = apply(uniform.samples, 2, mean)
+
+sample.median = apply(uniform.samples, 2, median)
+
+sample.midrange = (apply(uniform.samples, 2, max) + apply(uniform.samples, 2, min)) / 2
+
+sample.midIQR = (apply(uniform.samples, 2, quantile, probs=0.25) + apply(uniform.samples, 2, quantile, probs=0.75)) / 2
+
+par(mfrow=c(2,2))
+
+hist(sample.mean, main = "Distn of Sample Mean", col = 'steelblue')
+hist(sample.median, main = "Distn of Sample Median")
+hist(sample.midrange, main = "Distn of Sample Midrange")
+hist(sample.midIQR, main = "Distn of Sample MidIQR")
+
+```
+
+ 
+Statistic | Shape of the Sampling Distn | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------------------------|-------------------------|---------------|----------------
+Sample Mean | Symmetric, bell-Shaped | `r mean(sample.mean)` | `r sd(sample.mean)`
+Sample Median | Symmetric, bell-shaped | `r mean(sample.median)` | `r sd(sample.median)`
+Sample Midrange | Symmetric, bell-shaped | `r mean(sample.midrange)` | `r sd(sample.midrange)`
+Sample MidIQR | Symmetric, bell-shaped | `r mean(sample.midIQR)` | `r sd(sample.midIQR)`
+ 
+ 
+*****
+
+In the previous example, we investigated sampling distributions for some uncommon statistics (midrange, midIQR, etc.).  All proved to be unbiased esetimators for the mean (or median) of the Uniform distribution.  
+
+What if we are interested in estimating the minimum of the Uniform distribution?  The most logical statistic to use would be the sample minimum.  What is the simulated sampling distribution for this statistic?
+
+```{r min_samplingDistn}
+
+uniform.samples = replicate(10000, runif(15, 0, 10))
+
+uniform.min = apply(uniform.samples, 2, min)
+
+hist(uniform.min, main = "Sampling Distn of the Sample Minimum", xlab = "Sample Minimum")
+
+abline(v=mean(uniform.min), col="red", lwd=2)
+
+mean(uniform.min)
+sd(uniform.min)
+```
+
+ 
+The sample minimum is **not** an unbiased estimator for the population minimum.  The bias in the estimate can be calculated using $\text{Bias}[\hat{\theta}] = E(\hat{\theta}) - \theta$.  In the case of the minimum, we estimated $E(\hat{\theta})$ = `r mean(uniform.min)` and the value of the true population minimum, $\theta$, is 0.  So, the bias in the sample minimum is `r mean(uniform.min) - 0`.  
+
+We can use probability theory to find the theoretical distribution of the minimum.  Define $Y_{(1)}$ to be the sample minimum.  Using parantheses in the subscript of a random variable is a common way to denote an *order statistic*.  The sample mimimum is the first observed value in the ordered dataset.  
+ 
+The CDF of the sample minimum is: 
+$$
+\begin{aligned}
+F(a) &= P(Y_{(1)} \le a) \\
+&= 1 - P(Y_{(1)} > a)  \\ 
+&= 1 - P(Y_1 > a, Y_2 > a, \dots, Y_{15} >a)  \\
+&= 1-P(Y_1 > a)*P(Y_2 > a)*\dots*P(Y_{15}>a) \\
+&= 1- {\Big(\frac{10-a}{10}\Big)}^{15} 
+\end{aligned}
+$$
+
+To find the density (or PDF) of the minimum, we can take the derivative of its CDF with respect to a: 
+$$
+\begin{aligned}
+f(a) &= \frac{d}{da} \Bigg[1-{\Big(\frac{10-a}{10}\Big)}^{15}\Bigg] \\
+&=-15{\Big(\frac{10-a}{10}\Big)}^{14}*\frac{-1}{10} \\
+&=\frac{3}{2}{\Big(\frac{10-a}{10}\Big)}^{14}
+\end{aligned}
+$$
+
+
+We could use the PDF of the minimum to find its mean and variance: 
+
+$$
+\begin{aligned}
+E(Y_{(1)}) &= \int_{0}^{10} y*f(y) dy \\
+&= \int_{0}^{10}\frac{3y}{2}{\Big(\frac{10-y}{10}\Big)}^{14} dy \\
+&= 0.625 \\
+\\
+Var(Y_{(1)}) &= E\big[Y_{(1)}^2\big] - \big(E(Y_{(1)})\big)^2 \\
+&= \int_{0}^{10}\frac{3y^2}{2}{\Big(\frac{10-y}{10}\Big)}^{14} dy - (0.625)^2 \\
+&= 0.73529 - (0.625)^2 \\
+&= 0.34467\\
+\\
+SD(Y_{(1)}) &= \sqrt{0.34467} = 0.58709
+\end{aligned}
+$$ 
+ 
+Now that we have the density of the sample minimum, let's compare this to the histogram of the simulated sampling distribution:
+
+```{r theory_comparison}
+min.pdf = function(x){
+  return(3/2*((10-x)/10)^14)
+}
+
+hist(uniform.min, freq = F, main="Sampling Distn of the Sample Min", xlab="Sample Min, n = 15", ylim = c(0, 1.5), xlim = c(0,5))
+par(new=T)
+curve(min.pdf(x), from = 0, to = 5, ylim=c(0, 1.5), col="red", lwd=3, xlab = "", ylab = "", xlim = c(0,5))
+
+```
+
+Notice how well the theoretical sampling distribution of the minimum (red curve)  agrees with the simulated sampling distribution (histogram).  The theoretical mean of 0.625 agrees with the simulated mean `r {mean(uniform.min)}`, and the theoretical variance of 0.34467 agrees with the simulated variance `r {var(uniform.min)}`.  This verifies the properties seen in the simulated distribution.  
+ 
+ *****
+ 
+ Before we move on, let's investigate the sampling distribution of the sample variance.  When calculating the sample variance, the formula used is $s^2 = \frac{1}{n-1} \sum{i=1}^{n}\big(y_i - \bar{y}\big)^2$.  When first introduced to this formula, the most often asked question is why the sum of *n* observations is then divided by *n-1*.
+ 
+ To answer this question, let's investigate the sampling distributions of the following two statistics:
+ 
+ * $s^2$: the sum of the squared deviations divided by n-1
+ 
+ * $\frac{n-1}{n}s^2$: the sum of the squared deviations from the mean divided by n
+ 
+ To investigate, suppose we take random samples of 25 observations from a normal population with mean 20 nd standard deviation 3.  For each sample, the two statistics above will be calculated.  Then the values of the calculated statistics will be studied for patterns - these are the simulated sampling distribution for the statistics.  
+ 
+```{r variance_samplingDistn}
+
+normal.samples = replicate(10000, rnorm(25, mean = 20, sd = 3))
+
+variance.n1 = apply(normal.samples, 2, var)
+
+# the var() function in R returns the variance with 1/(n-1) used as the multiplier.  Multiplying this calculation by the constant (n-1)/n will return the variance with the multiplier 1/n
+
+normal.samples = replicate(10000, rnorm(25, mean = 20, sd = 3))
+
+variance.n = (25-1)/25*apply(normal.samples, 2, var)
+
+par(mfrow=c(1,2))
+hist(variance.n1, main = "Sampling Distn of the Variance", sub = "Constant: 1/(n-1)")
+abline(v=mean(variance.n1), col="red", lwd=2)
+
+hist(variance.n, main = "Sampling Distn of the Variance", sub = "Constant: 1/(n-1)")
+abline(v=mean(variance.n), col="red", lwd=2)
+```
+ 
+Let's compare the means of the sampling distributions:
+
+Variance Constant | Mean of $s^2$ | Bias of $s^2$
+------------------|---------------|----------------
+$\frac{1}{n-1}$ | `r {mean(variance.n1)}` | `r {mean(variance.n1) - 9}`
+$\frac{1}{n}$ | `r {mean(variance.n)}` | `r {mean(variance.n) - 9}`
+
+When calculating the sample variance, dividing by n-1 results in a statistic whose sampling distribution is unbiased for the population variance.  Dividing by n results in a biased estimate of the variance.
+
+What impact will increasing the sample size have on the estimators?  
+
+```{r variance_large_sample_size}
+normal.samples = replicate(10000, rnorm(2500, mean = 20, sd = 3))
+
+variance.n1 = apply(normal.samples, 2, var)
+
+# the var() function in R returns the variance with 1/(n-1) used as the multiplier.  Multiplying this calculation by the constant (n-1)/n will return the variance with the multiplier 1/n
+
+normal.samples = replicate(10000, rnorm(2500, mean = 20, sd = 3))
+
+variance.n = (2500-1)/2500*apply(normal.samples, 2, var)
+
+par(mfrow=c(1,2))
+hist(variance.n1, main = "Sampling Distn of the Variance", sub = "Constant: 1/(n-1)")
+abline(v=mean(variance.n1), col="red", lwd=2)
+
+hist(variance.n, main = "Sampling Distn of the Variance", sub = "Constant: 1/(n-1)")
+abline(v=mean(variance.n), col="red", lwd=2)
+
+```
+
+Variance Constant | Mean of $s^2$ | Bias of $s^2$
+------------------|---------------|----------------
+$\frac{1}{n-1}$ | `r {mean(variance.n1)}` | `r {mean(variance.n1) - 9}`
+$\frac{1}{n}$ | `r {mean(variance.n)}` | `r {mean(variance.n) - 9}`

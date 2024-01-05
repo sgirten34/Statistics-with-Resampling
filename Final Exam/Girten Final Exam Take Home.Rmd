@@ -1,0 +1,281 @@
+---
+title: "Final Exam - Take Home"
+author: "Scott Girten"
+date: "`r format(Sys.time(), '%B %e, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The take home portion of Exam 2 will be submitted via Canvas as two files. The first is your R Markdown file; the second is the knitted HTML file. 
+
+*******
+
+#{.tabset}
+
+## Problem 1
+
+An agent for a residential real estate company in a large city would like to be able to predict the monthly rent for an apartment based on the square footage of the apartment.  A sample of 25 apartments in a particular residential neighborhood was selected, and the square footage and rent for the apartment were recorded. 
+
+* Create a scatterplot for the data collected. Briefly comment on whether linear regression would be appropriate. Use R to fit the simple linear regression model. (5 points)
+
+```{r housing_scatterplot}
+
+house_data = read.csv("rent.csv", header = T)
+
+rent = house_data$Rent
+sqFeet = house_data$Square.Feet
+
+plot(x = sqFeet, y = rent, pch=16, xlab = "Square Feet", ylab = "Rent")
+```
+
+The scatterplot shows that as the square feet of an apartment increases so does the rent.  The pattern suggests that a linear funtion could be used to model the relationship. 
+
+```{r housing_regression}
+summary(lm(rent~sqFeet))
+
+plot(x = sqFeet, y = rent, pch=16, xlab = "Square Feet", ylab = "Rent")
+abline(lm(rent~sqFeet), col="blue", lwd=3)
+
+```
+
+
+
+* Find a 95% bootstrap percentile interval for the slope by bootstrapping the residuals of the model. Interpret the interval. Does the interval allow you to conclude there is a significant linear relationship between square footage and price? Explain. (6 points)
+
+```{r house_bootstrap_residuals}
+# Residuals from the original model
+residuals = lm(rent~sqFeet)$residuals
+
+# Bootstrap sample of residuals
+boot.residuals = sample(residuals, length(residuals), replace = T)
+
+# Fitted values from the original model
+fitted.rent = lm(rent~sqFeet)$fitted.values
+
+boot.slope = numeric(10000)
+
+for (i in 1:10000){
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.rent = fitted.rent + boot.residuals
+  boot.slope[i] = lm(boot.rent~sqFeet)$coefficients[2]
+}
+
+hist(boot.slope, main = "Bootstrap Distribution of the Slope")
+abline(v=quantile(boot.slope, probs = c(0.025, 0.975)), col="blue", lwd=2)
+
+```
+
+With 95% confidence, I estimate the slope of the regression model for predicting rent based on square footage to be between `r round(quantile(boot.slope, probs = 0.025), 3)` and `r round(quantile(boot.slope, probs = 0.975), 3)`.  Since this interval does not contain 0, which would imply a possibility of no relationship between rent and square feet, it is reasonable to conclude that there is a significant positive linear relationship between square feet and rental price.
+
+
+* A potential renter is interested in an apartment which has 1125 square feet. Estimate the **average** rent for apartments of this size using a 98% bootstrap percentile interval. Interpret the interval you find. (6 points)
+
+```{r predict_avg_rent}
+
+
+boot.error = numeric(10000)
+boot.pred.rent = numeric(10000)
+
+for(i in 1:10000){
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.rent = fitted.rent + boot.residuals
+  boot.pred.rent[i] = predict.lm(lm(boot.rent~sqFeet), newdata = data.frame(sqFeet=1125))
+  boot.error[i] = predict.lm(lm(rent~sqFeet), newdata = data.frame(sqFeet=1125)) - boot.pred.rent[i]
+}
+
+hist(boot.error, main = "Bootstrap Error Estimates for Square Feet = 1125")
+abline(v=quantile(boot.error, probs = c(0.01, 0.99)), col="blue", lwd=2)
+
+# Generate confidence interval from the bootstrapped errors
+pred.rent = predict.lm(lm(rent~sqFeet), newdata = data.frame(sqFeet = 1125))
+
+# Lower and Upper limits
+lowlim = pred.rent - quantile(boot.error, probs = 0.99)
+uplim = pred.rent - quantile(boot.error, probs = 0.01)
+
+```
+
+With 98% confidence, I estimate the average rent for apartments with 1125 square feet to between `r scales::dollar(lowlim)` and `r scales::dollar(uplim)`.
+
+* In the data, there is one apartment that is significantly larger than the other apartments sampled. Omit this observation from the data and repeat bootstrap procedure from part b. Construct side-by-side histograms of the two bootstrap distributions for the slope (with and without the observation). What effect did removing this observation have on the bootstrap distribution for the slope? Explain fully. (8 points)
+
+```{r large_obs-omitted}
+
+house_data2 = dplyr::filter(house_data, Square.Feet < 1800)
+rent2 = house_data2$Rent
+sqFeet2 = house_data2$Square.Feet
+
+#plot(x=sqFeet2, y=rent2, pch=16)
+
+# Residuals from the original model
+residuals2 = lm(rent2~sqFeet2)$residuals
+
+# Bootstrap sample of residuals
+boot.residuals2 = sample(residuals2, length(residuals2), replace = T)
+
+# Fitted values from the original model
+fitted.rent2 = lm(rent2~sqFeet2)$fitted.values
+
+boot.slope2 = numeric(10000)
+
+for (i in 1:10000){
+  boot.residuals2 = sample(residuals2, length(residuals2), replace = T)
+  boot.rent2 = fitted.rent2 + boot.residuals2
+  boot.slope2[i] = lm(boot.rent2~sqFeet2)$coefficients[2]
+}
+
+par(mfrow=c(1,2))
+hist(boot.slope, main = "Bootstrap Distn of the Slope", xlab = "All Values")
+hist(boot.slope2, main = "Bootstrap Distn of the Slope", xlab = "Outlier Omitted")
+
+```
+
+Removing the observation containing an apartment with a large square footage had no effect on the bootstrap distribution of the slope.  Both distributions are centered at the same value and have nearly the same spread.  Since we are resampling with replacement, the probability that any one value will be included in a sample is small.  For the original dataset containing all the values, the probability of an observation being included in the sample is $\big(\frac{1}{25}\big)^{25}$.  If we were calculating a single slope, there would be a chance that this observation could produce a significantly different slope.  However, the small probability of a particular observation being sampled combined with 10,000 simulations leads to a situation where the outlier has no real effect on the bootstrap distribution of the slope.  
+
+*****
+
+## Problem 2
+
+The NFL has scheduled a varying number of Thursday night games since the 2006 season. The Thursday night games generate additional television air time, beyond the traditional Sunday games and the highly-billed Monday night game, without interfering with high school and college games traditionally played on Friday and Saturday. Recently, though, a claim has been made that the margin of victory for the Thursday night games is greater than that of Sunday games (in other words, the Thursday night games are less exciting). To investigate this claim, a sample of 500 games from the 2012-2015 NFL seasons was collected (note that not all of the sampled games occurred on a Sunday or Thursday). 
+
+* Determine if the typical margin of victory for the Thursday night games is greater than the typical margin for Sunday games. Briefly justify the statistic you chose to use in the test. For the test, you must follow the format we used in class, including providing a histogram of the null distribution. (8 points)
+
+    I chose to use a permutation test and a test statistic $T(X) = \bar{X_T} - \bar{X_S}$.  I can test the null distribution of T(X), and if there is no difference in the margin of victory for Sunday games and Thursday night games the value of this statistic would center around 0.
+
+> $\mu_S$ = mean margin of victory for Sunday games
+>
+> $\mu_T$ = mean margin of victory for Thurday night games
+>
+> $H_o: \mu_T = \mu_S$
+>
+> $H_a: \mu_T > \mu_S$
+
+```{r nfl_data, message=FALSE}
+nfl_data_raw = readr::read_csv("NFL.csv")
+
+# Sunday and Thursday games only
+sun_games = dplyr::filter(nfl_data_raw, Day == "Sun")
+thur_games = dplyr::filter(nfl_data_raw, Day == "Thu")
+
+# Margin of Victory for Sunday and Thursday games
+sun_mrg = sun_games$Margin
+thur_mrg = thur_games$Margin
+
+# Vector containing margin of victory for both Sunday and Thursday
+tot_mrg = c(sun_mrg, thur_mrg)
+
+
+# Storage vector for simulated differences
+simulated_ts = numeric(9999)
+
+for(i in 1:9999){
+  index = sample(length(tot_mrg), length(thur_mrg), replace = F)
+  simulated_ts[i] = mean(tot_mrg[index]) - mean(tot_mrg[-index])
+}
+
+# Observed test statistic
+obs_ts = mean(thur_mrg) - mean(sun_mrg)
+
+# Calculate the p-value
+pval = sum(simulated_ts >= obs_ts + 1) / (9999 + 1)
+
+hist(simulated_ts, main = "Null Distribution of T(X)", xlab = "Simulated T.S. (Thursday - Sunday)")
+
+```
+
+The p-value of `r pval` indicates that there is a small but reasonable chance that at the 95% significance level that the observed test statistic would occur if the null hypothesis is true and there is no difference in the mean margin of victory for Thursday and Sunday games.  There is evidence to conclude that the mean margin of victory for a Thursday night game is the same as mean margin of victory for a Sunday game.
+
+
+* We would like to use the kernel density approach to estimate our populations of victory margins, but we must use a square root transformation of the data in order to guarantee the resulting data consists of positive values. 
+    + Transform the margin of victory using the square root function. Take a bootstrap sample from the transformed values. 
+    + Add noise to the bootstrapped values by generating random normal variable with a mean of 0 and a standard deviation of $s_t/\sqrt{n}$, where $s_t$ is the standard deviation of the transformed margin of victory. 
+    + Transform back to the original scale by squaring the smoothed bootstrap values.
+    
+    Use this process to generate a single sample of Thursday margin of victories and a single sample of Sunday margin of victories. Create a histogram of the two samples from the kernel density estimate side-by-side with the original sample. Comment on whether the kernel density estimate produced a distribution similar to the original sample. (8 points)
+    
+```{r kernel_density_estimation}
+
+# Transform margin of victory vectors by square root transformation
+trans.thur.mrg = apply(as.matrix(thur_mrg), 2, sqrt)
+trans.sun.mrg = apply(as.matrix(sun_mrg), 2, sqrt)
+
+# Bootstrap sample of the transformed values
+t.boot.thur.mrg = sample(trans.thur.mrg, length(trans.thur.mrg), replace = T)
+t.boot.sun.mrg = sample(trans.sun.mrg, length(trans.sun.mrg), replace = T)
+
+# Noise for both vectors of transformed values
+thur.noise = rnorm(length(t.boot.thur.mrg), mean = 0, 
+                   sd = sd(trans.thur.mrg)/sqrt(length(trans.thur.mrg)))
+sun.noise = rnorm(length(t.boot.sun.mrg), mean = 0, sd = sd(trans.sun.mrg)/sqrt(length(trans.sun.mrg)))
+
+# Add noise to bootstrap sample and transform back to the original scale
+new.thur.mrg = (t.boot.thur.mrg + thur.noise) * (t.boot.thur.mrg + thur.noise)
+new.sun.mrg = (t.boot.sun.mrg + sun.noise) * (t.boot.sun.mrg + sun.noise)
+
+# KDE Plot
+
+par(new=T)
+plot(density(new.thur.mrg, kernel = "gaussian", bw=sd(new.thur.mrg)/sqrt(length(new.thur.mrg))), main = "Comparison of Margin of Victory for Thursday and Sunday Games", sub = "Kernel Density Estimate", xlim=c(0,35), ylim=c(0,0.15), col="red", lwd=2)
+
+par(new=T)
+plot(density(new.sun.mrg, kernel = "gaussian", bw=sd(new.sun.mrg)/sqrt(length(new.sun.mrg))), main = "", xlim=c(0,35), ylim=c(0,0.15), col="blue", lwd=2)
+
+par(new=T)
+plot(density(sun_mrg, kernel = "gaussian", bw=sd(sun_mrg)/sqrt(length(sun_mrg))), main = "", xlim=c(0,35), ylim=c(0,0.15), col="green", lwd=2)
+
+par(new=T)
+plot(density(thur_mrg, kernel = "gaussian", bw=sd(thur_mrg)/sqrt(length(thur_mrg))), main = "", xlim=c(0,35), ylim=c(0,0.15), col="orange", lwd=2)
+
+legend(x="topright", legend = c("Thur(KDE)", "Sun(KDE)", "Thur(Actual)", "Sun(Actual)"), col=c("red", "blue", "orange", "green"), lty = 1 )
+
+
+```
+
+The Kernel Density Estimate did produce a distribution which is very similar to the original sample.  The KDE for both the Thursday games and the Sunday games closely approximates the underlying sample.  The KDE for the Sunday games very closely approximates the original sample, probably due to the large sample size in the original sample.
+
+    
+* Using the process below, determine the the power of the test comparing typical margin of victory for the two nights using a significance level of 0.10. (10 points)
+    + Simulate a sample of Thursday night margin of victories using the process described in the previous question. Similarly, simulate a sample of Sunday margin of victories using this process. 
+    + Conduct a permutation test with 9,999 replications testing to see if the typical margin of victory for Thursday night games is greater than the typical margin for Sunday games. Use the same test statistic as the one you chose in part a. Store the p-value of the test. 
+    + Repeat this process 500 times, storing the p-value each time. Use the stored p-values to calculate the power of the test. 
+    
+```{r power}
+pval2 = numeric(500)
+
+for(i in 1:500){
+  # Bootstrap sample of the transformed values
+t.boot.thur.mrg = sample(trans.thur.mrg, length(trans.thur.mrg), replace = T)
+t.boot.sun.mrg = sample(trans.sun.mrg, length(trans.sun.mrg), replace = T)
+
+# Noise for both vectors of transformed values
+thur.noise = rnorm(length(t.boot.thur.mrg), mean = 0, 
+                   sd = sd(trans.thur.mrg)/sqrt(length(trans.thur.mrg)))
+sun.noise = rnorm(length(t.boot.sun.mrg), mean = 0, sd = sd(trans.sun.mrg)/sqrt(length(trans.sun.mrg)))
+
+# Add noise to bootstrap sample and transform back to the original scale
+new.thur.mrg = (t.boot.thur.mrg + thur.noise) * (t.boot.thur.mrg + thur.noise)
+new.sun.mrg = (t.boot.sun.mrg + sun.noise) * (t.boot.sun.mrg + sun.noise)
+
+# Permutation test on data + noise
+margin.noise = c(new.thur.mrg, new.sun.mrg)
+resamples = replicate(9999, sample(margin.noise, length(margin.noise), replace = F))
+simulated_ts2 = apply(resamples[1:36,], 2, mean) - apply(resamples[37:464,], 2, mean)
+
+pval2[i] = sum(simulated_ts2 >= obs_ts + 1) / 10000
+
+
+  
+}
+
+power = sum(pval2 <= 0.10) / 500
+
+```
+
+At a 0.10 level of significance, the power of T(X) is `r power`.   
+
+* If the variability were to decrease in the margins of victory for the two days, what effect would this have on the power of the test? Explain. (Note: You do not have to recalculate the power in order to answer this question.)  (4 points)
+
+Assuming that the power in the previous question is not suppossed to be `r power`, the effect that decreasing variability would have on the power would depend on where the p-value is centered.  If the center of the p-value distribution is less than the significance level, decreasing the variability would result in an increase in power for the test since there would be fewer simulated samples which would be greater than the significance level.  Conversely, if the center of the p-value distribution is greater than the significance level, the decreased variability would have the opposite effect and would decrease the power of the test.

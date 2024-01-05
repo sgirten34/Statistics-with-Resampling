@@ -1,0 +1,260 @@
+---
+title: "Homework 1"
+author: "Scott Girten"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = TRUE, echo = TRUE)
+```
+
+All homework will be submitted via R Markdown files. 
+
+```{r book_data, message=TRUE, warning=TRUE, include=FALSE}
+#install.packages("resampledata")
+library(resampledata)
+```
+
+```{r subset_data, include=FALSE}
+data(FlightDelays) 
+# creates a datafrom from the library that was loaded
+
+United_delays <- subset(FlightDelays, select = Delay, subset = Carrier == "UA", drop = TRUE)
+
+American_delays <- subset(FlightDelays, select = Delay, subset = Carrier == "AA", drop = TRUE)
+
+# the first input is the data frame to be used 
+# the second input tells R which column to select from
+# the third input specifies the condition that will mark delay lengths for inclusion in the new vector
+# specifying drop = TRUE will treat the values as a vector as opposed to a data frame
+
+# Create two dataframes for delays in May and June
+May_delays = subset(FlightDelays, select = Delay, subset = Month == "May", drop = TRUE)
+
+June_delays = subset(FlightDelays, select = Delay, subset = Month == "June", drop = TRUE)
+```
+
+### Question 1
+
+Complete problem 3.5 (page 71) in the text. The two requested hypothesis tests should follow the format below: 
+
+* Define the parameters of interest and state the hypotheses to be tested. 
+* Define the test statistic used to test the claim. 
+* Simulate the null distribution of the test statistic, including a histogram of the distribution with the observed test statistic identified. 
+* Caclulate the p-value of the test. 
+* Report a conclusion for the test. 
+
+*****
+
+$\underline{\textbf{Part A}}$
+
+> $\mu_a$ = mean delay time for American Airlines
+>
+> $\mu_u$ = mean delay time for United Airlines
+>
+> $H_o : \mu_a = \mu_u$
+>
+> $H_a : \mu_a \ne \mu_u$
+
+**Test Statistic:** if the difference in  mean delay times for American Airlines and United Airlines is statistically significant, the test statistic $T(X) = \lvert\bar{X}_a - \bar{X}_u\rvert$ can be used.
+
+```{r delay_nullDist}
+
+# Combine American and United delays into one vector
+delays_total = c(United_delays, American_delays)
+
+# Create a storage vector for the simulated differences
+delays_simulated_ts = numeric(9999)
+
+for (i in 1:9999){
+  # Create vector of length of delays_total and the number of samples is length of United_delays vector
+  index = sample(length(delays_total), length(United_delays), replace = FALSE)
+  delays_simulated_ts[i] = abs(mean(delays_total[index]) - mean(delays_total[-index]))
+}
+
+hist(delays_simulated_ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic for Difference in Delay Times")
+
+```
+
+
+**p-value Calculation**
+
+```{r nullDist_pvalue}
+# Calculate observed test statistic
+obs_ts = abs(mean(United_delays) - mean(American_delays))
+
+hist(delays_simulated_ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic for Difference in Delay Times")
+
+# Vertical line representing the observed teset statistic
+abline(v = obs_ts, col="orange", lwd = 3)
+```
+
+The p-value for $T(X)$ is `r {(sum(delays_simulated_ts >= obs_ts) + 1) / 10000}`
+
+**Conclusion:** Due to a small p-value of the observed test statistic, there is evidence to conclude that there is a statistical difference in the mean delay times between American and United Airlines.
+
+
+$\underline{\textbf{Part B}}$
+
+> $\mu_M$ = mean delay time for May
+>
+> $\mu_J$ = mean delay time for June
+>
+> $H_o: \mu_M = \mu_J$
+>
+> $H_a: \mu_M \ne \mu_J$
+
+**Test Statistic:** if the differnce in mean delay time between May and June is statistically significant, the test statistic $T(X) = \lvert\bar{X}_M - \bar{X}_J\rvert$ can be used.
+
+```{r delays_month_dist}
+# Combine May and June delays into one vector
+month_delays = c(May_delays, June_delays)
+
+month_sim_ts = numeric(9999)
+ for (i in 1:9999){
+   index = sample(length(month_delays), length(May_delays), replace=FALSE)
+   month_sim_ts[i] = abs(mean(month_delays[index]) - mean(month_delays[-index]))
+ }
+
+month_obs_ts = abs(mean(May_delays) - mean(June_delays))
+
+hist(month_sim_ts, main = "Null Distribution of T(X)", xlab ="Absolute difference in Mean Delay Time for May and June")
+abline(v = month_obs_ts, col="orange", lwd = 3)
+
+month_pvalue = (sum(month_sim_ts >= month_obs_ts) + 1) / 10000
+
+```
+
+The p-value is `r {month_pvalue}`
+
+**Conclusion:** Due to a small p-value of the observed test statistic, there is evidence of a statistically significant difference in the mean delay times for May and June.
+
+*****
+
+### Question 2
+
+Complete problem 3.7 (page 71). The problem asks you to repeat part a of question 3.5 using 3 different test statistics. Please make sure the caclulation of the 3 test statistics all occurs within the same FOR loop.
+
+**Code to conduct the 3 tests and calculate the p-values**
+
+```{r three_ts}
+# 3 observed test statistics
+mean_UA_obs = mean(United_delays)
+sum_UA_obs = sum(United_delays)
+mean_diff_obs = mean(United_delays) - mean(American_delays)
+
+# 3 vectors to store simulations
+sum_UA_ts = numeric(9999)
+mean_UA_ts = numeric(9999)
+mean_diff_ts = numeric(9999)
+
+for (i in 1:9999){
+  index = sample(length(delays_total), length(United_delays), replace = F)
+  sum_UA_ts[i] = sum(delays_total[index])
+  mean_UA_ts[i] = mean(delays_total[index])
+  mean_diff_ts[i] = mean(delays_total[index]) - mean(delays_total[-index])
+}
+
+# p-value calculations
+sum_pval = (sum(sum_UA_ts >= sum_UA_obs) + 1) / 10000
+mean_pval = (sum(mean_UA_ts >= mean_UA_obs) + 1) / 10000
+mean_diff_pval = (sum(mean_diff_ts >= mean_diff_obs) + 1) / 10000
+
+```
+
+
+Statistic        | p-value
+-----------------|-----------------
+Mean             | `r {mean_pval}`
+Sum              | `r {sum_pval}`
+mean Difference  | `r {mean_diff_pval}`
+
+**Observation:** The p-values for all 3 statistics have the same value.  My assumpiton is that since all 3 statistics were simulated in the same for loop they will then have the same p-values.
+
+*****
+
+### Question 3
+
+The Department of Tourism in Illinois wants to determine if there is a difference in the mean cost of a taxi ride for customers paying by cash and those paying by credit. A sample of 150 taxi rides is selected, and the total fare and method of payment is recorded. The data for 78 cash payments and 72 credit payment is below: 
+
+```{r taxi_data, include=FALSE}
+cash<-c(15.5,4.25,5.25,16.25,15.5,5.5,19.25,44.75,44.25,4.75,6,24.5,13.5,8,8.25,11.75,4.25,9,48.5,19.25,4,11.5,29,10.75,5.5,6.5,42.5,9.75,4.75,9,6.25,15,7.75,14.5,6.75,5.5,16.5,7.25,7.75,5,3.25,5,6.5,6.25,7.5,12.75,5,9.25,6.5,8,43.75,8,36.5,44.25,6.5,5.75,22.5,14,6.25,41.5,13,12.25,38,6.5,4.75,41.25,15.25,6.5,10,24,12.5,13.75,8.5,10.5,7,5.25,12.75,7.25)
+
+credit<-c(7.5,7.25,6.75,32,6.25,6.5,19,5.75,6.75,5.5,6.25,6.75,7,6.75,46.25,6,9.25,16,6,10,7.25,7.75,5,5,6.25,29.25,4,8.75,6.75,14.25,21.75,21.5,36.5,11.25,58.75,6.75,7.25,3.75,9.25,8.5,5.75,6.75,5.25,6.5,6.5,6.5,20.5,4.75,5.75,43.25,5,11.25,38.5,8.75,12.75,23,6.25,12.25,42,8.25,5.5,6.75,6,12.25,42.5,7.75,43.75,49.75,12,13,4.75,8.5)
+```
+
+Suppose a permutation test was conducted on this data to determine if there is a difference in the mean taxi fare for the two payment methods. 
+
+* If the *exact* null distribution were constructed, how many unique resamples exist? 
+
+    + The exact null distribution would contain $\binom{150}{78}$ resamples.
+    
+
+* With a much larger pool of resamples, let's investigate the effect number of resamples has on the mean and varaibility of p-values from the permutation test. Write code to generate output that will allow the table below to be filled in based on the simulation of 1000 p-values (note to save computing time, I've provided the values for 20,000 resamples): 
+
+```{r taxi_resample}
+total_payments = c(cash, credit)
+
+# Create vecotos for each p-value simulation
+one_K_pval = numeric(1000)
+five_K_pval = numeric(1000)
+ten_K_pval = numeric(1000)
+fifteen_K_pval = numeric(1000)
+
+# Simulation loop
+for (i in 1:1000){
+
+  # Create dataframe for each number of resamples
+  one_K_resamples = replicate(1000, sample(total_payments, length(total_payments), replace = F))
+  five_K_resamples = replicate(5000, sample(total_payments, length(total_payments), replace = F))
+  ten_K_resamples = replicate(10000, sample(total_payments, length(total_payments), replace = F))
+  fifteen_K_resamples = replicate(15000, sample(total_payments, length(total_payments), replace = F))
+  
+  # Test statistic for each number of resamples
+  one_K_sim_ts = abs(apply(one_K_resamples[1:78,], 2, mean) - apply(one_K_resamples[79:150,], 2, mean))
+  five_K_sim_ts = abs(apply(five_K_resamples[1:78,], 2, mean) - apply(five_K_resamples[79:150,], 2, mean))
+  ten_K_sim_ts = abs(apply(ten_K_resamples[1:78,], 2, mean) - apply(ten_K_resamples[79:150,], 2, mean))
+  fifteen_K_sim_ts = abs(apply(fifteen_K_resamples[1:78,], 2, mean) - apply(fifteen_K_resamples[79:150,],   2, mean))
+  
+  # Observed test statistic
+  taxi_obs_ts = abs(mean(cash) - mean(credit))
+  
+  # P-value vector for each number of resamples
+  one_K_pval[i] = (sum(one_K_sim_ts >= taxi_obs_ts) + 1) / 1000
+  five_K_pval[i] = (sum(five_K_sim_ts >= taxi_obs_ts) + 1) / 5000
+  ten_K_pval[i] =  (sum(ten_K_sim_ts >= taxi_obs_ts) + 1) / 10000
+  fifteen_K_pval[i] = (sum(fifteen_K_sim_ts >= taxi_obs_ts) + 1) / 15000
+}
+
+# Calculate mean and standard deviation for each vector of p-values
+one_K_mean = mean(one_K_pval)
+five_K_mean = mean(five_K_pval)
+ten_K_mean = mean(ten_K_pval)
+fifteen_K_mean = mean(fifteen_K_pval)
+
+# Calculate the standard deviation for each vector of p-values
+one_K_sd = sd(one_K_pval)
+five_K_sd = sd(five_K_pval)
+ten_K_sd = sd(ten_K_pval)
+fifteen_K_sd = sd(fifteen_K_pval)
+
+```
+
+
+Number of Resamples | Mean of the p-values | Std Dev of the p-values
+--------------------|----------------------|-------------------------
+1000                |`r {one_K_mean}`      |`r {one_K_sd}`
+5000                |`r {five_K_mean}`     |`r {five_K_sd}`
+10,000              |`r {ten_K_mean}`      |`r {ten_K_sd}`
+15,000              |`r {fifteen_K_mean}`  |`r {fifteen_K_sd}`
+20,000              | 0.8837033            | 0.002207726
+
+* Breifly comment on the pattern observed in the means and standard deviations of the p-values. 
+
+    + The means of the p-values are approximately the same.  The standard deviations of the p-values becomes smaller as the number of resamples increases, leading to less variabiity of the p-value.
+
+
+

@@ -1,0 +1,444 @@
+---
+title: 'Module 3: Additional Hypothesis Tests'
+author: "Girten"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Additional Hypothesis Tests for Quantitative Data 
+
+Thus far our focus has been on comparing two populations with a permutation test when independent samples were selected. Can we extend the logic of a permutation test to 3 or more independent samples? 
+
+**Example:** Each month, QSR magazine publishes its results of drive-through service times (from menu board to departure) at fast-food chains. In a recent month, the drive-through service times of random sample of 20 customers from Burger King, McDonald's, Wendy's, and White Castle were recorded. The data is in the vectors below: 
+
+```{r drive_thru_data, include = FALSE}
+bk <- c(155,157,164,166,176,148,138,152,184,129,145,134,168,147,137,160,136,161,159,170)
+
+mcd <- c(146,169,145,165,167,177,174,155,155,166,168,162,173,161,155,167,171,176,143,153)
+
+wdy <- c(136,136,116,114,134,128,132,121,148,121,111,124,135,124,124,120,132,144,117,126)
+
+wc <- c(205,216,212,222,223,215,217,212,221,203,231,205,206,229,219,198,196,200,224,208)
+```
+
+To compare the distributions, we could construct side-by-side boxplots or histograms.  But, it would also be nice to see a smoothed estimate of what the underlying distribution or density of the data is.  We can use a technique called *kernel density estimation*.
+
+#### Kernel Density Estimation
+
+Kernel density estimation is a technique that allows us to create a smooth curve from a set of data that retains all the properties of a probability density function (pdf).  This can be useful if we want to visualize the "shape" of some data with a graphical display other than histogram.  
+
+Let's see an example of a kernel density estimate in R:
+
+```{r bk_kde}
+par(mfrow=c(1,2))
+hist(bk)
+
+# The R function density() will create kernel density plots
+plot(density(bk,kernel="gaussian",bw=sd(bk)/sqrt(length(bk))), main = "Burger King Drive Thru Times", sub = "Kernel Density Estimate")
+
+```
+
+How is the kernel density estimate calculated?
+
+* We start with a dotplot of the sample data.
+
+* Next, draw a normal curve centered over each sampled data value with some standard deviation, $\sigma_k$.  The normal curve is called the "kernel". 
+
+* To obtain the kernel density estimate, we will add up the normal curves drawn over the range of x-values: $\hat{f}(X) = \frac{1}{n} \sum{g(x-x_i)}$ where *g* is the normal density with mean 0 and standard deviation $sigma_k$.
+
+```{r bk_kde_steps}
+#Let's create a blank plotting window with an x range between the BK drive thru times
+plot(1, type="n", xlab = "", ylab = "", xlim = c(120, 190), ylim = c(0, 0.1))
+
+# Now add a dot representing each drive-thru time
+points(x = bk, y = rep(0, length(bk)), pch = 16, xlim = c(120, 190), ylim = c(0, 0.1))
+
+# To add normal curves over each point, we can use the curve() function inside a for loop:
+sigma.k = 5
+
+for (i in 1:length(bk)){
+  par(new=T)
+  curve(1/length(bk)*dnorm(x, mean=bk[i], sd=sigma.k), from = bk[i] -3*sigma.k, to = bk[i] + 3*sigma.k, xlim=c(120, 190), ylim = c(0, 0.1))
+}
+
+x = seq(120, 190, by=0.01)
+y = numeric(length(x))
+
+for(i in 1:length(x)){
+  y[i] = 1/length(bk) * sum(dnorm(x[i]-bk, mean=0, sd=sigma.k))
+}
+
+plot(x, y)
+
+```
+
+When working with kernel density estimation, selecting the kernel (What distribution function to draw over each data point) and its associated spread is an art.  It is common to use the normal distribution with $\sigma_k = \frac{s}{\sqrt{n}}$, but there are other choices.  In the density function in R you can select from the following: rectangular, triangular, etc....
+
+```{r bk_kde_kernels}
+# function inputs are data, kernel, binwidth
+plot(density(bk, kernel="rectangular", bw=sd(bk)/sqrt(length(bk))), main="Burger King Drive Thru Time", sub="Triangular Density")
+
+```
+
+Let's use the kernel density estimate to compare the 4 drive-thru distributions:
+
+```{r kde_drive_thru}
+par(new=T)
+
+plot(density(bk,kernel="gaussian",bw=sd(bk)/sqrt(length(bk))), main = "Comparison of Drive Thru Times", sub = "Kernel Density Estimate", xlim=c(100,250), ylim=c(0,0.05), col="red", lwd=2)
+
+par(new=T)
+plot(density(mcd,kernel="gaussian",bw=sd(mcd)/sqrt(length(bk))), xlim=c(100,250), ylim=c(0,0.05), col="yellow", lwd=2, main="")
+
+par(new=T)
+plot(density(wdy,kernel="gaussian",bw=sd(wdy)/sqrt(length(bk))), xlim=c(100,250), ylim=c(0,0.05), col="blue", lwd=2, main="")
+
+par(new=T)
+plot(density(wc,kernel="gaussian",bw=sd(wc)/sqrt(length(bk))), xlim=c(100,250), ylim=c(0,0.05), col="green", lwd=2, main="")
+
+legend(x="topright", legend = c("BK", "McD", "Wdy", "WC"), col=c("red", "yellow", "blue", "green"), lty=1)
+```
+
+Based on the smoothed distributions, it seems as though White Castle has the greatest mean drive-thru time, Wendy's has what may be the smallest mean and there is significant overlap between the distributions for McDonald's and Burger King.  
+
+In order to test this theory, we can use *analysis of variance* or ANOVA.  This test extends the two-sample test to 3 or more populations.  
+
+#### Analysis of Variance
+
+What hypothesis are tested?
+
+> $H_O: \mu{BK} = \mu_M = \mu_W = \mu_{WC}$
+>
+> $H_a: \text{Some difference in the means}$
+
+To test the claim, we need to construct a test statistic.  If the null hypothesis is true, we would expect the sample means to be reasonably close in value.  What test statistics could be used to determine if the sample means are close in value>
+
+* Ratio of the sample means - 
+$\frac{\frac{\bar{y}_{BK}}}{\frac{\bar{y}_W}{\bar{y}_{WC}}}$: If the null hypothesis is true, we expect a numerator close to 1 and a denominator close to 1, so the expected value of the test statistic under the null should be 1.
+
+* Standard deviation between the sample means: large values of the test statistic would give support for the alternative hypothesis because there is a lot of spread between the sample means.  
+
+* Range of the sample means (largest sample mean - smallest sample mean): large values of the test statistic would give support for the alternative.  
+
+How would we construct the null distributions of these test statistics using permutation methods?
+
+* Combine all 80 drive-thru times (this assumes the null hypothesis is true) and randomly assign the times into 4 groups of 20 times.
+
+* Calculate the test statistic for the shuffled data.  
+
+* Repeat this process until 9999 values of the test statistic are computed. 
+
+```{r drive_thru_nulldistns}
+null.distnT1 = numeric(9999)
+null.distnT2 = numeric(9999)
+null.distnT3 = numeric(9999)
+
+drive.thru = c(bk, mcd, wdy, wc)
+
+for(i in 1:9999){
+  time.shuffle = sample(drive.thru, 80) #randomize the 80 observations
+  mean.1 = mean(time.shuffle[1:20]) # mean of first 20 obs
+  mean.2 = mean(time.shuffle[21:40]) # mean of next 20 obs
+  mean.3 = mean(time.shuffle[41:60])
+  mean.4 = mean(time.shuffle[61:80])
+  
+  shuffle.means = c(mean.1, mean.2, mean.3, mean.4)
+  
+  null.distnT1[i] = (mean.1/mean.2) / (mean.3/mean.4)
+  null.distnT2[i] = sd(shuffle.means)
+  null.distnT3[i] = max(shuffle.means) - min(shuffle.means)
+}
+
+par(mfrow=c(1,3))
+
+hist(null.distnT1, main="Null Distn of T1", xlab="Ratio of Sample Means")
+hist(null.distnT2, main="Null Distn of T2", xlab="StDev of Sample Means")
+hist(null.distnT3, main="Null Distn of T3", xlab="Range of Sample Means")
+
+```
+
+
+For the first test statistic, extreme values (those that support the alternative) are those far from a value of 1 - this can happen in both the left & right tail of the distribution.  For the next two test statistics, extreme values are those in the right tail much larger than 0.  This will lead to the calculation of p-values:
+
+```{r drive_thru_pvalue}
+obsT1 = (mean(bk)/mean(mcd)) / (mean(wdy)/mean(wc))
+obsT2 = sd(c(mean(bk), mean(mcd), mean(wdy), mean(wc)))
+obsT3 = max(c(mean(bk), mean(mcd), mean(wdy), mean(wc))) - min((c(mean(bk), mean(mcd), mean(wdy), mean(wc))))
+
+# T1 p-value
+(sum(null.distnT1 >= obsT1) + sum(null.distnT1 <= 1/obsT1)+ 1) / 10000
+
+# T2 p-value
+(sum(null.distnT2 >= obsT2) + 1) / 10000
+
+# T3 p-value
+(sum(null.distnT3 >= obsT3) + 1) / 10000
+
+
+```
+
+Regardless of test statistic, the probability returned is incredibly small.  This leads us to conclude there is some difference in the mean drive-thru times across the 4 fast food chains.
+
+#### Test for Categorical Data
+
+The logic of a permutation test extends to categorical data as well.  
+
+**Example:** MythBusters performed an experiment to test the claim that yawning is contagious.
+
+What hypothesis will be tested?
+
+> $p_1 = \text{proportion who will yawn after seeing someone yawn}$
+>
+> $p_2 = \text{proportion who will yawn with no stimulus}$
+>
+> $H_0: p_1 = p_2$
+>
+> $H_a: p_1 > p_2$
+
+A sample of 50 individuals was recruited.  34 people were "seeded" with a yawn and placed in a room for observation.  16 people did not see someone yawn before being placed in a room.  A total of 14 people yawned during the observation.
+
+To test the claim, we can use the following test statistic: $T(X) = \hat{p}_1 - \hat{p}_2$ where $\hat{p}$ represents the associated sample proportion for each group.
+
+Before knowing the observed results from the experiment, simulate what values of the test statistic we expect to observe if the null hypothesis is true (i.e. yawning is not contagious).  
+
+* First, we need to create a vector of results.  Assign a value of 1 to represent an individual who yawned; assign a value of 0 for those who did not yawn.
+
+* From the vector of outcomes, reandomly assign 34 outcomes to the "seeded"" group and 16 outcomes to unseeded group.  To do this, we can take a random sample of size 50 from the outcome vector - this will just shuffle the results.  The first 34 values belong to the seeded group; the remaining 16 belong to the unseeded group.  
+
+* For each permutation, calculate the difference in the proportion of yawners ( our test statistic).
+
+* Repeat this process 9999 times.
+
+```{r yawn_null}
+# function repeat = rep(value, num of times repeated)
+outcome = c(rep(1, 14), rep(0, 36))
+
+null.distn = numeric(9999)
+
+for (i in 1:9999){
+  outcome.shuffle = sample(outcome, 50)
+  null.distn[i] = sum(outcome.shuffle[1:34]) / 34 - sum(outcome.shuffle[35:50]) / 16
+}
+
+hist(null.distn, main = "Null Distn", xlab = "Differences in Sample Proportions (seeded - unseeded)")
+
+```
+
+As expected, the null distribution centered over a value of 0 (our null hypothesis said the two population proportions were equal).
+
+What were the results of the Mythbusters experiment?
+
+> 10 people in the "seeded" group yawned, and 4 people in the control group yawned.  The observed value of the test statistic is $T(X) = \frac{10}{34} - \frac{4}{16} = 0.044128$
+
+The p-value of the test is:
+```{r yawn_pvalue}
+(sum(null.distn >= (10/34 - 4/16)) + 1) / 10000
+
+```
+
+Interpret the p-value: If the null hypothesis is true and there is no difference in the liklihood of yawning for the two groups, then we would observe sample results as extreme or more than what we obtained in 50.71% of samples.
+
+Based on the p-value, there is no evidence to support the claim that a larger proportion of individuals yawn after seeing someone yawn (i.e. yawning is contagious).  
+
+*****
+
+How do the results of the permutation test compare to what we would have gotten using traditional test?  Instead of appealing to an approximate test such as the Z-test for two porportions, we can rely on *Fisher's Exact test*.  This test considers all possible arrangements fo the observed categorical data to determine an exact distribution.  
+
+Seeded - Yawn | Seeded - No Yawn | Control - Yawn | Control - No Yawn | Probability--------------|------------------|----------------|-------------------|-------------14 | 20 | 0 | 16 | `r choose(34,14)/choose(50,14)`13 | 21 | 1 | 15 | `r choose(34,13)*choose(16,1)/choose(50,14)`12 | 22 | 2 | 14 | `r choose(34,12)*choose(16,2)/choose(50,14)`11 | 23 | 3 | 13 | `r choose(34,11)*choose(16,3)/choose(50,14)`10 | 24 | 4 | 12 | `r choose(34,10)*choose(16,4)/choose(50,14)`9  | 25 | 5 | 11 | `r choose(34,9)*choose(16,5)/choose(50,14)`8  | 26 | 6 | 10 | `r choose(34,8)*choose(16,6)/choose(50,14)`7  | 27 | 7 | 9  | `r choose(34,7)*choose(16,7)/choose(50,14)`6  | 28 | 8 | 8  | `r choose(34,6)*choose(16,8)/choose(50,14)`5  | 29 | 9 | 7  | `r choose(34,5)*choose(16,9)/choose(50,14)`4  | 30 | 10| 6  | `r choose(34,4)*choose(16,10)/choose(50,14)`3  | 31 | 11| 5  | `r choose(34,3)*choose(16,11)/choose(50,14)`2  | 32 | 12| 4  | `r choose(34,2)*choose(16,12)/choose(50,14)`1. | 33 | 13| 3  | `r choose(34,1)*choose(16,13)/choose(50,14)`0  | 34 | 14| 2  | `r choose(34,0)*choose(16,14)/choose(50,14)`
+
+Each of the probability calculations is a Hypergeometric calculation finding the probability of observing that many yawns in the seeded group. For example, the first row calculation is: $\frac{\binom{34}{14}\binom{16}{0}}{\binom{50}{14}}$.
+
+The first 5 rows of the table correspond to the observed data or data more extreme (meaning yawning was more likely to occur in the seeded group). Summing these probaiblities yieds: `r choose(34,14)/choose(50,14) + choose(34,13)*choose(16,1)/choose(50,14) + choose(34,12)*choose(16,2)/choose(50,14) + choose(34,11)*choose(16,3)/choose(50,14) + choose(34,10)*choose(16,4)/choose(50,14)`. This is the p-value reported in Fisher's Exact test.
+
+We can also use R to calculate the Fisher's Exact p-value:
+
+```{r yawn_Fisher}
+group = c(rep("Seeded", 34), rep("Control", 16))
+result = c(rep("Yawn", 10), rep("No yawn", 24), rep("Yawn", 4), rep("No yawn", 12))
+
+table(group, result)
+
+fisher.test(x=group, y=result, alternative = "greater")
+
+```
+
+*****
+
+The p-value obtained from Fisher's test is the *exact* p-value.  The simulated p-value obtained from the permutation test is pretty close to this value.  What would we expect to see if we were to simulate lots of p-values from the Mythbusters data?  
+
+Conjectures:
+
+* Distribution of p-values should center over the true p-value of 0.5128.
+
+* The distribution of p-values should have a standard deviation of $\sqrt{\frac{0.5128(1-0.5128)}{10000}}$ = 0.004998
+
+* The distribution of p-values will be approximately normal.  
+
+To test these conjectures, we can simulate lots of p-values, each one obtained from a permutation test with 10,000 replications.
+
+```{r yawn_pvalue_sim}
+yawn.pvalues = numeric(1000)
+
+for (i in 1:1000){
+
+permutations = replicate(9999, sample(outcome, 50))
+null.distn = apply(permutations[1:34,] ,2, sum)/34 - apply(permutations[35:50,] ,2, sum)/16
+
+yawn.pvalues[i] = (sum(null.distn >= (10/34 - 4/16)) + 1)/10000
+}
+
+hist(yawn.pvalues)
+mean(yawn.pvalues)
+sd(yawn.pvalues)
+
+```
+
+
+
+#### Additional Comments on Permutation Tests
+
+What about the choice of test statitic?
+
+**Theorem:** In permutation tests, if two test statistics are related by a strictly increasing function, $T_1(X^*) = f(T_2(X^*))$ where $X^*$ is any permutation of the observed data, then the test statistics yield the same p-values.
+
+Let's go back to the earlier tennis example comparing the force after impact in tennis shots.
+
+```{r tennis_data, echo=FALSE}
+advanced <- c(44.7, 26.31, 55.75, 28.54, 46.99, 39.46, 38.72)
+intermediate <- c(15.58, 19.16, 24.13, 10.56, 32.88, 21.47, 14.32, 33.09, 28.51)
+```
+
+In the test, we defined the test statistic as $T(X) = \bar{y}_A - \bar{y}_I$.  This theorem suggests we would get identical results if we had used $T(X) = \bar{Y}_A$.  Is this the case?
+
+```{r tennes_revisited}
+#Combine tennis data into one vector
+tennisData = c(advanced, intermediate)
+
+
+ts1 = numeric(9999)
+ts2 = numeric(9999)
+
+for (i in 1:9999){
+  index = sample(16, 7, replace = F)
+  
+  ts1[i] = mean(tennisData[index]) - mean(tennisData[-index])
+  ts2[i] = mean(tennisData[index])
+}
+#Test Stat 1
+(sum(ts1 >= mean(advanced) - mean(intermediate)) + 1) / 10000
+
+#Test Stat 2
+(sum(ts2 >= mean(advanced)) + 1) / 10000
+
+
+```
+
+Both test statistics returned the same p-value
+
+> Let's carefully consider the statement of the theorem. Let $T_1(X) = \bar{Y}_A - \bar{Y}_I$ and let $T_2(X) = \bar{Y}_A$. If we can find a strictly increasing function that relates the two test statistics, then this explains why the p-values are identical.
+>
+> $S = \text{sum of the 16 force measurements} = 480.17$.
+>
+> $S = 480.17 = 7*\bar{Y}_A + 9*\bar{Y}_I$
+>
+> $\bar{Y}_I = \frac{1}{9} \big( 480.17 - 7\bar{Y}_A \big)$
+>
+>
+> So, $\bar{Y}_A - \bar{Y}_I = \bar{Y}_A - \frac{1}{9} \big( 480.17 - 7\bar{Y}_A \big)$
+>
+> $T_1(X) = \bar{Y}_A - \bar{Y}_I = \frac{16}{9}\bar{Y}_A - \frac{480.17}{9}$
+>
+> From the theorem, we can say $T_1(Y) = f(\bar{Y}_A) = \frac{16}{9}\bar{Y}_A - \frac{480.17}{9}$.Because this is a monotone increasing function, the test statistics result in identical p-values in a permutation test.
+
+*****
+
+Under what conditions can a permutation test be used?
+
+* There are no distributional assumptions (so, no need to sample from a normal population, for example)
+
+* Because we are pooling data, we do assume the two samples come from the same underlying population.  
+
+In practice, permutation test are generally robust when two populations have different underlying distributions.  However, there's one exception - if the two populations have dramatically different spreads & the sample sizes are dissimilar.
+
+Let's look at an extreme case where the populations have the same shape & mean, but with *drastically* different spreads:
+
+* Population 1: normal, $\mu = 0$, $\sigma = 100$
+
+* Population 2: normal, $\mu = 0$, $\sigma = 1$
+
+Supposes we take a sample of size $n_1 = 10$ from population 1 and a sample of size $n_2 = 100$ from population 2.  The data will be used to test $H_a: \mu_1 \ne \mu_2$ against $H_0: \mu_1 = \mu_2$.
+
+Let $T(Y) = \bar{y}_1$.  What is the null distribution of T?  For what values of T will the null hypothesis be rejected if we set $\alpha = 0.05$.
+
+```{r nulldistn_t}
+# Generate samples from the two normal populations described
+# Pool the samples & permute the observations
+# Calculate the mean of the first 10 observations (ybar1)
+# Repeat 10000 times
+
+#sample1 = rnorm(10, mean = 0, sd = 100)
+#sample2 = rnorm(100, mean = 0, sd = 1)
+
+null.distn = numeric(10000)
+
+for (i in 1:10000){
+  sample1 = rnorm(10, mean = 0, sd = 100)
+  sample2 = rnorm(100, mean = 0, sd = 1)
+  permutation = sample(c(sample1, sample2), 110)
+  null.distn[i] = mean(permutation[1:10])
+}
+
+hist(null.distn)
+
+# The quantile function will return percentiles of the distribution 
+
+quantile(null.distn, prob = 0.025)
+quantile(null.distn, prob = 0.975)
+
+```
+
+Based on the null distribution, we would reject the null and conclude the population means differ if the first sample mean is less than `r {quantile(null.distn, prob = 0.025)}` or greater than `r{quantile(null.distn, prob = 0.975)}`.
+
+How likely is $\bar{Y}_1$ to be more extreme than these values?
+
+Because the test statistic is the sample mean, we can use the Central Limit Theorem to describe its sampling distribution.  The CLT tells us the distribution of T(X) should be normally distributed with $\mu_{\bar{Y}} = 0$ and $\sigma_{\bar{Y}} = \frac{\sigma}{\sqrt{n}} = \frac{100}{\sqrt{10}} = 31.62278$.
+
+```{r nulldistn_t_compare}
+curve(dnorm(x, mean = 0, sd = 100/sqrt(10)), from = -90, to = 90, col = "blue", lwd = 3, ylim = c(0, 0.04))
+par(new=T)
+hist(null.distn, freq = F, xlim = c(-90, 90), ylim = c(0, 0.04))
+abline(v = quantile(null.distn, prob = 0.025), col = "red", lwd = 3)
+abline(v = quantile(null.distn, prob = 0.975), col = "red", lwd = 3)
+```
+
+We can use the r fucntion pnorm - this function returns cumulative probabilities (CDF values). The likelihood the null is rejected is `r pnorm(quantile(null.distn, probs=0.025), mean = 0, sd = 100/sqrt(10)) + 1 - pnorm(quantile(null.distn, probs=0.975), mean = 0, sd = 100/sqrt(10))`. Using the CLT, there is a much greater chance of committing a Type I error than the significance level that was set at 5%. The likelihood of committing a Type I error exceeds 50%. 
+
+When setting up our populations, the population means were equal - so, the null hypothesis is true. Setting $\alpha = 0.05$ means that 5% of all possible samples should lead us to reject the null hypothesis when it is actually true (Type I error). But, the CLT is telling us this error rate is *significantly* larger. 
+
+To compare two means, there are also two versions of the t-test that can be used. One version uses the pooled variance and assumes the populations have equal variability; the other version approximates degrees of freedom and does not assume equal variability. 
+
+Let's compare the significance level of these 2 tests to what was observed in the permutation test: 
+
+```{r ttest_alpha}
+ttest.pooled <- numeric(10000)
+ttest.unpooled <- numeric(10000)
+
+for(i in 1:10000){
+  sample1 <- rnorm(10, mean=0, sd=100)
+  sample2 <- rnorm(100, mean=0, sd=1)
+  ttest.pooled[i] <- t.test(sample1,sample2,alternative="two.sided", var.equal=T)$p.value
+  ttest.unpooled[i] <- t.test(sample1,sample2, alternative="two.sided", var.equal=F)$p.value
+}
+
+#Simulated Significance Level - Pooled t-test
+sum(ttest.pooled <= 0.05)/10000
+
+#Count the number of times the null hypothesis is incorrectly rejected.
+
+#Simulated Significance level - Unpooled t-test
+sum(ttest.unpooled <= 0.05)/10000
+
+```

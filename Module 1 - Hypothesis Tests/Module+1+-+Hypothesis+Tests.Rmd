@@ -1,0 +1,448 @@
+---
+title: 'Module 1: Hypothesis Tests'
+author: "Girten"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+# include = FALSE - this means this chunck of code will not appear on the compiled document
+knitr::opts_chunk$set(echo = TRUE)
+# echo = TRUE means the default setting will be to print both the code and the output
+```
+
+## Hypothesis Tests {.tabset .tabset-fade .tabset-pills}
+
+### Introduction to Hypothesis Tests
+
+Hypotheses are written in terms of population parameters. What parameters have you used in previous hypothesis tests? 
+
+> Hypothesis have been written in terms of means ($\mu$), proportions (p), variances, IQR, medians, etc.....
+
+**Definition:** The *null hypothesis*, denoted $H_0$ is a statement that corresponds to no real effect. The *alternative hypothesis*, denoted $H_a$ is a statement that there is some type of effect present in the population. Typically the alternative hypothesis takes one of three forms: less than, greater than, or not equal to. 
+
+**Definition:** A *test statistic* is a numerical function of the data whose value is used to determine the result of the test. The function itself will be denoted by $T(X)$, where X denotes the data. The test statistic is a random variable - its value will change based upon the sample collected. Once the test statistic has been calculated, it is referred to as the *observed test statistic* and is written in lower case $t = T(x)$. 
+
+**Definition:** The *p-value* is the probability that chance alone would produce a test statistic as extreme as the observed test statistics **if the null hypothesis were true**. The direction of extremity depends upon the alternative hypothesis tested. 
+
+***
+
+### Hypothesis Test Example 
+
+Suppose scientists invent a new drug that supposedly will inhibit a mouse's ability to run through a maze. Three mice are randomly chosen to receive the drug, and another 3 mice serve as a control. The time each mouse takes to go through a maze is measured in seconds. The results are: 
+
+```{r mice_data, echo=FALSE}
+drug = c(30, 25, 20)
+control = c(18, 21, 22)
+# c is the combine function.  It is used to combine arguments into a vector.  Then the values can be used in other functions.
+```
+
+Drug       | Control
+-----------|-----------
+30         | 18 
+25         | 21
+20         | 22
+$\bar{x}_d$ = `r mean(drug)` | $\bar{x}_c$ = `r mean(control)`
+
+Define the parameters that can be used to compare typical maze times. Then, state the hypotheses that will be tested. 
+
+> $\mu_d$ = mean maze time for mice receiving the experimental drug
+>
+> $\mu_c$ = mean maze time for mice receiving the control drug
+>
+> $H_0: \mu_d = \mu_c$
+>
+> $H_A: \mu_d > \mu_c$
+
+If we were to test this claim, the *classical* approach to a hypothesis test would use the t-distribution: 
+
+>$t = \frac{(\bar{X}_d - \bar{X}_c) - (\mu_d - \mu_c)}{\sqrt{\frac{S_d^2}{n_d} + \frac{S_c^2}{n_c}}}$
+
+We can use the R function **t.test** to conduct the hypothesis test. The required inputs in the function are the data values in the two samples and the direction of the alternative. 
+
+```{r, mice_ttest}
+t.test(x=drug, y=control, alternative = "greater")
+#inputs are the two vectors containing the sample data followed by the direction of the alternative hypothesis
+```
+> the p-value reported is 0.125, meaning that 12% of samples would result in data this extreme or more if there is no difference in the mean maze completion time for the two treatments (i.e. the null is true).  Because this is not an unusual probability, the null hypothesis would not be rejected.  There is not significant evidence to suggest a difference in mean maze completion time for the two treatments.
+
+*****
+
+Questions:
+
+* Is the test statistic intuitive?
+* How are we assuming the null hypothesis is true?
+
+There are some potential problems with using a t-test to test the claim. Assumptions have to be satisfied in order to use the t-distribution for inference: 
+
+* The populations from which the data is sampled are normally distributed.
+* Large sample sizes can compensate for non-normality (the largeness depends on the degree of non-normality).
+* The variability in the populations is approximately equal.  If this assumption is not satisfied, there is an approximation for the degrees of freedom (Welch approximation in R; Satterthwaite in other programs).
+
+In our example, the sample size was so small that it's impossible to determine if the samples suggest normality.  Ideally, we would like an alternative to the classical hypothesis test.  
+
+*****
+
+### Introduction to Permutation Tests 
+
+When a hypothesis test is conducted, the test statistic is calculated based upon the assumption that the null hypothesis is true. In the numerator of the test statistic, we compared the difference in the sample means to the difference in the population means. However, the null said the two population means were equal; that means we were comparing the difference in the sample means to a null value of 0. 
+
+Suppose we wanted to use the following test statistic to test the claim:  $T(X) = \bar{X}_d - \bar{X}_c$.  Unlike the previous test statistic, this test statistic does not have a known distribution.  Without a distribution, there is no way to calculate a p-value.  We need a way to determine if our observed test statistic is extreme.  
+
+**Definition:**  The *null distribution* is the distribution of a test statistic if the null hypothesis is assumed true.  
+
+If the null hypothesis is true and the drug does not really impact maze completion, then the split of the 6 observed times into two groups is completely random.  How many ways can the 6 times be split into two groups of 3?
+
+> $\binom{6}{3} = \frac{6!}{3! (6-3)!} = 20$1
+
+The Excel file posted on Canvas contains all the permutations of the 6 maze times. This can be read into R, and we can find the sample mean for the times assigned to the drug and those assigned to the placebo. 
+
+```{r  mice_permutations}
+#maze_permutations = read.csv(file = "C:/Users/sgirt/Documents/STA 394/maze+times.csv", header = TRUE, row.names = NULL)
+library(tidyverse)
+maze_permutations = read_csv("maze+times.csv")
+
+drug_means = numeric(20) #creates a numeric vector of length 20
+control_means = numeric(20)
+
+for (i in 1:20){
+  drug_means[i] = mean(as.matrix(maze_permutations[i, 1:3]))
+  control_means[i] = mean(as.matrix(maze_permutations[i, 4:6]))
+}
+
+simulated_ts = drug_means  - control_means
+
+# Create a histogram of the null distribution
+hist(simulated_ts, main="Null Distribution of T(X)", xlab="Difference in Means (Drug - Control)")
+
+mean(simulated_ts)
+
+```
+
+
+Now that the null distribution has been calculated, we can use it to find the p-value of the test.  There are 20 values calulated in our null distribution; we need to find the proportion that are as extreme or more than the test statistic calculated from our observed data.
+
+```{r mice_pvalue}
+ obs_ts = mean(drug) - mean(control)
+
+#p-value
+sum(simulated_ts >= obs_ts) / length(simulated_ts)
+
+```
+
+*****
+
+###  General Logic of Permutation Tests
+
+1. Choose a test statistic that measures the effect of interest.  This doesn't have to be traditional test statistic; it can be something that is more intuitive like what was chosen in the mice example.
+
+2. Using simulation, construct the distribution of this statistic under the assumption that the null hypothesis is true.  The null distribution is a reference distribution much like we use the normal distribution, t-dist, f-dist, etc.  In the previous example, we found the *exact* null distribution of listing out all possible combinations of the maze times.  In general, this is not feasible and we rely on the approximate null distribution created via simulation.
+
+3. Calculate the p-value of the test using the null distribution.
+
+*****
+
+
+**Example:** Tennis elbow is thought to be aggravated by the impact experienced when hitting the ball. An investigator measured the force (Newtons) on the hand just after impact on a one-handed backhand drive for 7 advanced players and 9 intermediate players. Does the data provide evidence that the typical force after impact is greater for advanced tennis players?
+
+```{r tennis_data, echo=FALSE}
+advanced <- c(44.7, 26.31, 55.75, 28.54, 46.99, 39.46, 38.72)
+intermediate <- c(15.58, 19.16, 24.13, 10.56, 32.88, 21.47, 14.32, 33.09, 28.51)
+```
+
+Define the parameters usesd to compare typical force measurements for the two typese of player.  Then, state the hypothesis to be tested:
+
+> $\mu_a$ = mean force after impact for advanced tennis players
+>
+> $\mu_i$ = mean force after impact for intermediate players
+>
+> $H_O: \mu_a = \mu_i$
+>
+> $H_a: \mu_a > \mu_i$
+
+To test this claim, the test statistic $T(X) = \bar{X}_a - \bar{X}_i$ can be used.  
+
+If we were to construct the null distribution for T(X) for this data, there would be $\binom{16}{7}$ = `r choose(16,7)` combinations.  While we could exhaustively list these, it would take a considerable amount of time.
+
+
+Instead, we can simulate the approximate null distribution of T(X): 
+
+* Combine the 16 force measurements.  This assumes the null hypothesis is true - i.e. player skill has no impact on mean force after impact.
+* Randomly sample 7 observations that are going to be assigned to the advanced players.  The remaining 9 observations will be assigned to intermediate players.
+* Calculate the mean force for the values assigned to the two groups of players and find their difference (advanced -  intermediate).
+* Repeat this process 9999 times.
+
+What do you expect to see when a histogram of the null distribution is constructed?
+
+> We would expect the null distribution to pile up (center) around a value of 0 because under the assumption of the null we expect a value of 0 in the difference.  
+
+```{r tennis_null_dist}
+# combines the 16 observations into one vector
+force = c(advanced, intermediate)
+
+# create a storage vector for our simulated differences
+simulated_ts = numeric(9999)
+
+for (i in 1:9999){
+  # create a vector of 7 position values that correspond to forces assignmed to the advanced group
+  index = sample(16, 7, replace = F)
+  simulated_ts[i] = mean(force[index]) - mean(force[-index])
+}
+
+hist(simulated_ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic (Advanced - Intermediate)")
+
+mean(simulated_ts)
+sd(simulated_ts)
+
+```
+In order to calculate the p-value in our hypothesis test, we need to find our observed test statistic from the original sample:
+
+```{r tennis_obs_ts}
+obs_ts = mean(advanced) - mean(intermediate)
+
+hist(simulated_ts, main = "Null Distribution of T(X)", xlab = "Simulated Test Statistic (Advanced - Intermediate)")
+
+# Add a vertical line to the histogram representing our observed test statistic
+abline(v = obs_ts, col="red", lwd = 3)
+
+```
+
+Calculate the p-value:
+
+```{r tennis_pvalue}
+sum(simulated_ts >= obs_ts + 1) / (9999 + 1)
+
+```
+
+> The p-value reported was very small.  The data collected is unlikely to occur if the null hypothesis is true.  There is significanct evidence to conclude the mean force on impact for advanced tennis players is greater than that for intermediate tennis players.  
+
+
+*****
+
+### Implementation Details
+
+* Calculation of the p-value: When conducting the permutation test, we used 9999 resamples, but the p-value was calculated as p-value = $\frac{\text{# of simulated test statistic >= obs test statistic + 1}}{\text{9999 + 1}}$.  Why add 1 to the numerator & denominator?  The +1 corresponds to including the original observed data as one of the resamples.  It allows us to avoid obtaining a p-value of 0 from the permutation test.
+
+
+* What about two-sided p-values?  The authors recommend finding the p-values for both one-sided tests (less than, greater than) and doubling the smaller probability.  But, this assumes the null distribution is roughly symmetric and that isn't guaranteed.  So, I recommend one of the following:
+
+    + Calculate a one-sided p-value on each side of the null distribution (by reversing the order of subtraction) & sum the values.  
+    + If the test statistic is based on differences, construct the null distribution using the absolute value of the difference.  The p-value will be the proportion of values greater than or equal to our observed difference.  
+    
+    
+    
+*****
+
+**Example:** Verizon is the primary local telephone company (ILEC) for a large area of the easetern US. It is responsible for providing repair service for the customers of other companies known as competing carriers (CLEC). A sample of 1664 Verizon (ILEC) repair times is selected, and a sample of 23 competitor (CLEC) repair times is selected. Does the data provide convincing evidence the typical repair times differ for the two types of customers?
+
+The dataset can be loaded from the resampledata library available on the [website](https://sites.google.com/site/ChiharaHesterberg) for the textbook:
+
+```{r verizon_data, include=FALSE}
+#install.packages("resampledata")
+library(resampledata)
+data(Verizon)
+
+verizon = subset(Verizon, select = Time, subset = Group == "ILEC", drop = TRUE)
+
+comp =  subset(Verizon, select = Time, subset = Group == "CLEC", drop = TRUE)
+
+```
+
+Let's investigate the distributions of repair times to determine the best measure for typical repair time.  We can create side-by-side histograms of the repair times:
+
+```{r repair_distns}
+par(mfrow = c(1, 2))
+# par() sets graphical parameters
+#mfrow = c(rows, columns) tells how many rows &columns you want in the graphics window.  Our line of code will create one row with two columns (or a side-by-side plot)
+
+hist(verizon, main = "Repair time for Verizon Customers", xlab = "Repair time (hours)")
+
+hist(comp, main = "Repair time for Competing Customers", xlab = "Repair time (hours)")
+
+
+```
+
+Both distributions are strongly right-skewed, which will inflate the value of the mean.  In order to compare typical repair times, let's compare the median repair times.  
+
+> $M_V$ = median repair time for Verizon customers
+>
+> $M_C$ = median repair time for competing customers
+>
+> $H_o: M_V = M_C$
+>
+> $H_a: M_V \ne M_C$ 
+
+To test the two-sided claim, we can use either of the following test statistics:
+
+* $T_1 = \tilde{M}_V - \tilde{M}_C$
+
+* $T_2 = \lvert\tilde{M}_V - \tilde{M}_C\rvert$
+
+To simulate the null distribution, we'll calculate the test statistics in the same FOR loop to allow for the p-values to be compared.
+
+$\abs{\tilde{M}_V}$
+
+```{r verizon_nulldistn}
+repairs = c(verizon, comp)
+
+simulated_ts1 = numeric(9999)
+simulated_ts2 = numeric(9999)
+
+for ( i in 1:9999){
+  index = sample(1687, 1664, replace=F)
+  # This creates a sample of 1664 positions out of the 1687 possible to represent Verizon repair times.  
+  simulated_ts1[i] = median(repairs[index]) - median(repairs[-index])
+  simulated_ts2[i] = abs(median(repairs[index]) - median(repairs[-index]))
+}
+
+obs_ts1 = median(verizon) - median(comp)
+obs_ts2 = abs(median(verizon) - median(comp))
+
+par(mfrow = c(1, 2))
+
+hist(simulated_ts1, main = "Null Distribution of T1", xlab = "Difference in Medians (V-C)")
+abline(v = obs_ts1, col = "red", lwd = 3) 
+abline(v = -1*obs_ts1, col = "red", lwd = 3)
+
+hist(simulated_ts2, main = "Null Distribution of T2", xlab = "Absolute Difference in Medians")
+abline(v = obs_ts2, col = "red", lwd = 3)
+
+```
+
+```{r verizon_pvalues}
+#p-value1
+(sum(simulated_ts1 <= obs_ts1) + sum(simulated_ts1 >= -1*obs_ts1) + 1) / (9999 + 1)
+
+#p-value2
+(sum(simulated_ts2 >= obs_ts2) + 1) / 10000
+
+```
+
+> Because the p-value is so small, there is evidence of a significant difference in the median repair times.  The observed medians allow us to conclude the median repair time for Verizon customers is significantly less than that of their competitors.  
+
+* Observation on the two-sided p-value 
+    + If we used the method recommended by the textbook, we would have found the two-sided p-values and doubled the smallest.  The greater than p-value would have been the smallest at 0.0001.  Doubling that would give a p-value of 0.0002 for the test.  The discrepancy between this p-value and those we calculated comes from the fact that the null distribution for the test statistic wasn't symmetric.
+    
+*****
+
+### Why 9999 resamples?
+
+Because the p-value is calculated from a simulated null distribution the p-values will vary from run-to-run.  We need to know what effect the number of resamples (10,000 resamples) has on the variables in our p-value.  
+
+*Conjecture:* The more resamples that are used when simulating the null distribution, the less variability there will be from p-value to p-value.  
+
+We can use simulation to test that conjecture:
+
+Suppose we were to repeat the hypothesis test on the tennis data but only use 100 resamples.  If we only did this process once, we would only obtain 1 p-value.  This won't help us get a feel for the validity of our conjecture - we need lots of p-values.  So, we will conduct the permutation test with 100 resamples 500 different times (this will give us 500 p-values).  We need to avoid a "loop inside a loop" situation because it makes R slow.  
+
+So, let's look at a different way to simulate the null distribution that avoid using a loop at all.  This can be done using the functions replicate() and apply().
+
+```{r tennis_test2}
+# Simplified code to perform ONE permutation test with 99 resamples without using a loop
+
+tennis_resamples = replicate(99, sample(force, 16, replace = F))
+
+# The replicate() function tells R to repeat a process a certain number of times.  We are asking for the sample of 16 force measuerments to be repeated 99 times.  R stores the samples in a matrix - our matrix will have 16 rows and 99 columns.  Each column is a permutation of the observed data values.  
+
+# For example, the first resample is:
+tennis_resamples[,1]
+# matrix notation is [rows, columns]
+
+# Now we need to calculate the mean for the first 7 observations (advanced players) and the last 9 observations (intermediate).  To do this for each of the 99 columns, we can use the apply function.
+
+simulated_ts = apply(tennis_resamples[1:7,], 2, mean) - apply(tennis_resamples[8:16,], 2, mean)
+
+# Apply calculates the mean (function) on every column (2) for the first 7 rows of tennis_resamples.
+
+#  p-value calculation
+obs_ts = mean(advanced) - mean(intermediate)
+(sum(simulated_ts >= obs_ts) + 1)/(99+1)
+
+
+```
+
+Now that we have a method by which we can obtain a permutation test p-value without using a FOR loop, we can repeat this process 500 times inside a loop to generate 500 p-values:
+
+```{r sim_pvalue}
+pvalue = numeric(500)
+
+for(i in 1:500){
+  # We will conduct 500 different permutation tests using the code we developed above
+  tennis_resamples = replicate(2500, sample(force, 16, replace = F))
+  simulated_ts = apply(tennis_resamples[1:7,], 2, mean) - apply(tennis_resamples[8:16,], 2, mean)
+  obs_ts = mean(advanced) - mean(intermediate)
+  pvalue[i] = (sum(simulated_ts >= obs_ts) + 1)/(2499+1)
+}
+
+hist(pvalue)
+mean(pvalue)
+sd(pvalue)
+
+```
+
+Our conjecture was that the variability from p-value to p-value would decrease as the number of resamples increased. To test the conjecture, we can simulate lots of p-value from permutation tests based on varying numbers of resamples. Then, we can calculuate the standard deviation of the p-values.Number of Resamples | Std Deviation of p-values.
+
+Number of Resamples | Std Deviation of p-values
+--------------------|---------------------------
+100                 |0.003410405
+500                 |0.001645695
+1000                |0.001157807
+1500                |0.000957715
+2000                |0.000842924
+2500                |0.0007416024
+5000                |
+7500                |0.0004037909
+10000               |0.0003675548
+12500               |0.000339837
+15000               |0.0002900676
+
+The simulated p-value in a permutation test can bethought of as a sample proportion.  We know some theoretical properties of the sampling distribution of $\hat{p}$:
+
+* The sampling distribution of $\hat{p}$ is normally distributed for sufficiently large sample sizes.  
+
+* $\mu_{\hat{p}} = p$: the sampling distribution of $\hat{p}$ piles up around the true proportion
+
+* $\sigma_{\hat{p}} = \sqrt{\frac{p(1-p)}{n}}$: the variability in the sampling distribution decreases as the sample size increases
+
+*****
+
+In our simulation, we are considering the variability of the simulated p-values. In the equation for the standard deviation, p is the true p-value of the test (assuming we could find the excat null distribution) and n is the number of resamples.  
+
+
+What value of p maximizes the variability? 
+
+> $V(p) = \frac{p(1-p)}{n}$
+>
+> $\frac{dV}{dp} = \frac{1-2p}{n}$
+>
+> Setting the derivative equal to 0 and solving for p yields: 
+>
+> $\frac{1-2p}{n} = 0$
+>
+> $1 - 2p = 0$
+>
+> $p = 0.5$
+
+
+If we want the simulated p-value to be within 0.01 of the true p-value with 95% confidence, what value of n should be used? 
+
+Based on the Empirical Rule, we know 95% of the simulated p-values will fall within 2 standard deviations of the true
+
+```{r norm_curve, echo=FALSE}
+curve(dnorm, from =-3.5, to = 3.5, xlab="", ylab="", axes=FALSE)
+segments(x0 = -2, y0 = -0.1, x1 = -2, y1 = dnorm(-2))
+segments(x0 =  2, y0 = -0.1, x1 =  2, y1 = dnorm( 2))
+arrows(x0 = -2, y0 = 0.025, x1 = 2, y1 = 0.025, code = 3, length = 0.1)
+axis(1, at = seq(-3.5, 3.5, 0.5), labels = c("","","","-2","","","","p-value","","","","2","","",""))
+text(x=0,y=0.05,"95%")
+```
+
+Using the maximizing value of p = 0.5, we can solve the following: 
+
+> $2\sqrt{\frac{0.5(1-0.5)}{n}} = 0.01$
+>
+> $\frac{0.25}{n} = 0.000025$
+>
+> $n = 10000$

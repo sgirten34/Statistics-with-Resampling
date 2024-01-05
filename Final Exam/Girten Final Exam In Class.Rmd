@@ -1,0 +1,153 @@
+---
+title: "Final Exam In-Class"
+author: "Scott Girten"
+date: "May 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# {.tabset}
+
+## Problem 1 (30 points)
+
+The exponential distribution has the following pdf: $f(x)=\frac{1}{\beta}e^{-x/\beta}, x\ge0$. In the distribution, there is a single parameter, $\beta$, which defines the distribution. The mean and standard deviation of the distribution are both $\beta$. Suppose we are interested in an exponential population with $\beta=7$. Samples from this population can be generated using the `rexp` function. In the function, the input `rate` is $1/\beta$. 
+
+* Simulate the sampling distribution of the sample mean when samples of size 20 are taken from this population. Create a well-annotated histogram of the sampling distribution that includes vertical lines at $\beta$ and the mean of the sample means. Briefly comment on the shape, center, and spread of the sampling distribution. (7 points)
+
+```{r exp_mean_distn}
+
+exp.samples = replicate(10000, rexp(20, rate = 1/7))
+exp.mean.distn = apply(exp.samples, 2, mean)
+
+hist(exp.mean.distn, main = "Distribution of Sample Mean of Exponential Distn")
+abline(v=7, col="blue", lwd=3)
+abline(v=mean(exp.mean.distn), col="red", lwd=3, lty=2)
+
+```
+
+The sampling distribution of the sample mean is centered around 7.  The distribution is bell-shaped and  symmetrical with a slight right skew to the distribution.  
+
+* Simulate the sampling distribution of the sample standard deviation when samples of size 20 are taken from this population. Create a well-annotated histogram of the sampling distribution that includes vertical lines at $\beta$ and the mean of the sample standard deviations. Briefly comment on the shape, center, and spread of the sampling distribution. (7 points)
+
+
+```{r exp_sd_distn}
+
+exp.sd.distn = apply(exp.samples, 2, sd)
+
+hist(exp.sd.distn, main = "Distribution of Sample Standard Deviation for the Exp. Distn")
+abline(v=7, col="blue", lwd=3)
+abline(v=mean(exp.sd.distn), col="red", lwd=3, lty=2)
+
+```
+
+The sampling distribution for the sample standard deviation is centered around 7.  The distribution is not symmetrical and has a right skew. 
+
+* In the exponential distribution, the mean is the 63.2 quantile. Simulate the sampling distribution of this quantile when samples of size 20 are taken from this population. Create a well-annotated histogram of the sampling distribution that includes vertical lines at $\beta$ and the mean of the sample quantiles. Briefly comment on the shape, center, and spread of the sampling distribution. (7 points)
+
+```{r exp_quantile_distn}
+
+quant = function(n, p=0.632){
+  return(quantile(n, probs = p))
+}
+
+exp.qt.distn = apply(exp.samples, 2, quant)
+
+hist(exp.qt.distn, main = "Distribution of Sample 63.2 Quantile for the Exp. Distn")
+abline(v=7, col="blue", lwd=3)
+abline(v=mean(exp.qt.distn), col="red", lwd=3, lty=2)
+
+```
+
+The sampling distribution for the sample 63.2 quantile is centered around 7 and roughly symmetrical with a right skew.
+
+
+* Rank the three statistics (sample mean, sample standard deviation, sample quantile) in order of preference for estimating $\beta$. Provide a brief justification for the order in which you place the three estimators. (3 points)
+
+    * **Sample Mean:** The sample mean is an unbiased estimator for $\beta$.  In addition, the distribution of the sample mean has the smallest spread of any of the 3 statistics providing for the most precise estimator as well.
+    
+    * **63.2 Quantile:** The 63.2 quantile is also an unbiased estimator for $\beta$.  However, this distribution does have a right skew which leads to larger spread of the distribution and to a less precise estimate.
+    
+    * **Sample Standard Deviation:** The sample standard deviation is a biased estimator for $\beta$ since the center of the sample standard deviation distribution is slightly less than the true value of $\beta$.  This distribution also has the largest spread of the 3 statistics.
+
+## Problem 2 (16 points)
+
+A university administrator would like to compare the percentage of degrees awarded in education for public and private institutions that offer this degree in order to see if there is a difference in the two types of schools. A random sample of 142 private schools is selected, and each school selected reports the percentage of education degrees awarded in 2014. Similarly, a random sample of 158 public schools is asked to report the same information. The data has been posted on Canvas as a .CSV file. 
+
+* Read the data into R and fill in the table below with summary statistics for the percentage of degrees awarded in education at each of the two types of schools. (4 points)
+
+```{r read_school_data}
+
+school_data = readr::read_csv("pct EDU degrees.csv")
+
+public_data = dplyr::filter(school_data, School == "Public")
+private_data = dplyr::filter(school_data, School == "Private")
+
+public = public_data$Pct
+private = private_data$Pct
+```
+
+
+School | Mean | Std Deviation 
+-------|------|---------------
+Public | `r mean(public)` | `r sd(public)`
+Private| `r mean(private)`| `r sd(private)`
+    
+    
+* Four distributions were generated from the sample data (see image posted on Canvas). Three distributions are bootstrap distributions, and one is a null distribution. Using the summary statistics generated in the previous part, identify what each of the four distributions below represent and briefly discuss how you came to this conclusion. (8 points)
+
+    Distribution | Type 
+    -----|--------------------
+     1   |  Bootstrap Distn of the Sample Mean for Private Schools
+     2   |  Bootstrap Distn of the Sample Mean for Public Schools
+     3   |  Bootstrap Distn of the Difference of Means for Public - Private
+     4   |  Null Distribution 
+     
+     The mean of Distribution 1 is centered between 9 and 10, which corresponds to the mean of the private schools ( `r round(mean(private), 2)` ) in the sample data.  Distribution 2 is centered around 6, which corresponds to the mean of public schools ( `r round(mean(public), 2)` ) in the sample data.  Distribution 3, being centered at -4, corresponds to the difference in sample means ( Public - Private) which for the sample data is `r round(mean(public)-mean(private), 2)`.  Finally, Distribution 4 is the only distribution centered at 0 which is where you would expect a null distribution to be centered.  
+
+* Explain what statistical inference each of the four distributions could be used to make (i.e. why would each of the distributions have been generated). (4 points)
+
+    Distribution | Inference 
+    -----|----------------------------------------------------------------------------
+     1   |  To infer the mean pct. of degrees awarded in education for private schools
+     2   |  To infer the mean pct. of degrees awarded in education for public schools
+     3   |  To infer the difference in mean pct. of degrees awarded for public and private schools
+     4   |  To infer the difference in mean pct. of degrees awarded for public and private schools without having to make assumptions about the underlying distributions
+     
+     
+
+## Problem 3 (10 points)
+
+Over the semester, we have encountered the following terms: population, sample, sampling distribution, and bootstrap distribution. 
+
+* Define (in your own words and with correct statistical language) each of these terms. (8 points)
+
+    * **Population:** A  collection of elements representing all possible elements 
+    
+    * **Sample:** A subset of elements from a population
+    
+    * **Sampling Distribution:** A distribution of a statistic based on a sample, representing the possible range of values for the statistic
+    
+    * **Bootstrap Distribution:** A distribution of a statistic based on a repeated sampling with replacement of a sample showing the range of possible values for the statistic.
+    
+
+* Briefly discuss similarities and differences between the 4 distributions. (2 points)
+    
+    The population represents all known values and a sample is usually a representative sample of the underlying population.  The shape and spread of the sample and the population distributions often times are very similar.  The sampling distribution will show the possible range of values for a statistic, which can be used to infer about the population is the sample is representative of the population.  The bootstrap distribution will show the possible range of values for the sampling distribution of a statistic, which could then be used to infer about the value of a statistic related to a population.  
+
+## Problem 4 (4 points)
+
+Reflecting on the class, answer the following: (4 points)
+
+* Discuss one statistical concept you had learned prior to the class but now understand at a deeper level. 
+
+    P-values are a concept that I understood mathematically, but after using simulation to calculate p-values I now have a much better understanding of p-values.  All of those times in STA 250 where Dr. Agard would say "as extreme or more extreme" now make much more sense.  I think using simulation to explain p-values in the lower level classes would help tremendously in understanding what p-values represent.
+
+* Discuss one concept you had yet discussed in courses and what you learned about this idea. 
+
+    Permutation testing is a concept I had never heard of before this class.  It is intuitive idea that seems relatively easy to explain to people without a statistical background.  A lot of what we study in Data Science is about big data sets but I enjoy being able to take small data and using it to make reasonable inferences about a population.
+
+
+*****

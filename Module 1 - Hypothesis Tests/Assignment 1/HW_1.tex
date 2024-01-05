@@ -1,0 +1,214 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Homework 1},
+            pdfauthor={Scott Girten},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Homework 1}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Scott Girten}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+\maketitle
+
+All homework will be submitted via R Markdown files.
+
+\subsubsection{Question 1}\label{question-1}
+
+Complete problem 3.5 (page 71) in the text. The two requested hypothesis
+tests should follow the format below:
+
+\begin{itemize}
+\tightlist
+\item
+  Define the parameters of interest and state the hypotheses to be
+  tested.
+\item
+  Define the test statistic used to test the claim.
+\item
+  Simulate the null distribution of the test statistic, including a
+  histogram of the distribution with the observed test statistic
+  identified.
+\item
+  Caclulate the p-value of the test.
+\item
+  Report a conclusion for the test.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
+\(\underline{\textbf{Part A}}\)
+
+\begin{quote}
+\(\mu_a\) = mean delay time for American Airlines
+
+\(\mu_u\) = mean delay time for United Airlines
+
+\(H_o : \mu_a = \mu_u\)
+
+\(H_a : \mu_a \ne \mu_u\)
+\end{quote}
+
+\textbf{Test Statistic:} if the mean delay times for American Airlines
+and United Airlines is statistically significant, the test statistic
+\(T(X) = \bar{X}_a - \bar{X}_u\) can be used.
+
+Mean of \(T(X)\) = 1.1643652
+
+Standard Deviation of \(T(X)\) = 0.8833419
+
+\textbf{p-value Calculation}
+
+The p-value for \(T(X)\) is 10\^{}\{-4\}
+
+\subsubsection{Question 2}\label{question-2}
+
+Complete problem 3.7 (page 71). The problem asks you to repeat part a of
+question 3.5 using 3 different test statistics. Please make sure the
+caclulation of the 3 test statistics all occurs within the same FOR
+loop.
+
+\subsubsection{Question 3}\label{question-3}
+
+The Department of Tourism in Illinois wants to determine if there is a
+difference in the mean cost of a taxi ride for customers paying by cash
+and those paying by credit. A sample of 150 taxi rides is selected, and
+the total fare and method of payment is recorded. The data for 78 cash
+payments and 72 credit payment is below:
+
+Suppose a permutation test was conducted on this data to determine if
+there is a difference in the mean taxi fare for the two payment methods.
+
+\begin{itemize}
+\item
+  If the \emph{exact} null distribution were constructed, how many
+  unique resamples exist?
+\item
+  With a much larger pool of resamples, let's investigate the effect
+  number of resamples has on the mean and varaibility of p-values from
+  the permutation test. Write code to generate output that will allow
+  the table below to be filled in based on the simulation of 1000
+  p-values (note to save computing time, I've provided the values for
+  20,000 resamples):
+\end{itemize}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+Number of Resamples & Mean of the p-values & Std Dev of the
+p-values\tabularnewline
+\midrule
+\endhead
+1000 & &\tabularnewline
+5000 & &\tabularnewline
+10,000 & &\tabularnewline
+15,000 & &\tabularnewline
+20,000 & 0.8837033 & 0.002207726\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{itemize}
+\tightlist
+\item
+  Breifly comment on the pattern observed in the means and standard
+  deviations of the p-values.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
+
+The data refereneced in the above questions is accessible at this
+\href{https://sites.google.com/site/ChiharaHesterberg}{link}. Individual
+files can be downloaded from the
+\href{https://sites.google.com/site/chiharahesterberg/data2}{Data sets}
+link. Or, an R package has been created with all the data from the text
+included. The package can be installed with the following code:
+
+The data you'll be using contains flight delay information for United
+Airlines and American Airlines departures out of LaGuardia. Information
+on the variables contained in the datset is given in Section 1.1 of the
+textbook.
+
+The hypothesis tests you'll be conducting will required you to look at
+subsets of the dataset. For example, suppose we wanted to create a
+vector of delay times for all United Airlines flights. Assuming the data
+has been loaded as a Data Frame with the name FlightDelays, the
+following code would accomplish this:
+
+
+\end{document}

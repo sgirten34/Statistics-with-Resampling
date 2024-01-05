@@ -1,0 +1,222 @@
+---
+title: "Homework 2"
+author: "Scott Girten"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Investigating Power
+
+In class, we considered testing the following hypotheses: 
+
+$H_0$: population of mpg values is symmetric
+
+$H_a$: population of mpg values is right skewed
+	
+In class, we compared a skewness statistic based on cubed z-scores and the ratio of the sample mean to the sample median. However, the statistics below could also be used to test these hypotheses: 
+
+* $\frac{Q_3 - \text{Median}}{\text{Median}-Q_1}$
+* $\frac{\text{Max}-Q_3}{Q_1 - \text{Min}}$
+* $\frac{\text{Median}-Q_1}{Q_3 - Q_1}$
+
+1. Fill in the table below with the value we would expect from each statistic if the population were normally distributed. Briefly explain how you arrived at your answer. 
+
+Statistic | Expected Value under Symmetry | Explanation
+----------|-------------------------------|--------------
+$\frac{Q_3 - \text{Median}}{\text{Median}-Q_1}$| 1 | If the population is normally distributed then the difference between $Q_3$ and the median will have approximately the same value as the difference between the Median and $Q_1$.
+$\frac{\text{Max}-Q_3}{Q_1 - \text{Min}}$ | 1 | Since the population is normally distributed, then the differences for both the numerator and the denominator would be approximately the same.  Another way to view this statistic is that the area under the curve for both the numerator and denominator would be approximately the same. 
+$\frac{\text{Median}-Q_1}{Q_3 - Q_1}$ |$\frac{1}{2}$ | Since this is a normal curve and is symmetric, the median would represent the midpoint of the difference between $Q_3 - Q_1$.  Since the median cuts the interval $Q_3 - Q_1$ in half, the expected value of this statistic would be 0.5.
+
+2. For each statistic, generate the null distribution of the statistic if we sample 25 observations from a normal distribution with a mean of 10 and a standard deviation 2.5. Construct the null distributions based on 10,000 random values from the population. Construct side-by-side histograms of the 3 null distributions. 
+
+> T(A) = $\frac{Q_3 - \text{Median}}{\text{Median}-Q_1}$
+>
+> T(B) = $\frac{\text{Max}-Q_3}{Q_1 - \text{Min}}$
+>
+> T(C) = $\frac{\text{Median}-Q_1}{Q_3 - Q_1}$
+
+```{r null_Distn}
+# Create functions for test statistics
+ts_A = function(sample_A){
+  return(quantile(sample_A, probs =  0.75) - median(sample_A)) / (median(sample_A) - quantile(sample_A, probs = 0.25))
+}
+
+ts_B = function(sample_B){
+  return(max(sample_B) - quantile(sample_B, probs = 0.75)) / (quantile(sample_B, probs = 0.25) - min(sample_B))
+}
+
+ts_C = function(sample_C){
+  return(median(sample_C) - quantile(sample_C, probs = 0.25)) / (quantile(sample_C, probs = 0.75) - quantile(sample_C, probs = 0.25))
+}
+
+# Population of 10,000 with mean of 10 and standard deviation of 2.5
+normal_samples =  replicate(10000, rnorm(25, mean = 10, sd = 2.5))
+
+null_A = apply(normal_samples, 2, ts_A)
+null_B = apply(normal_samples, 2, ts_B)
+null_C = apply(normal_samples, 2, ts_C)
+
+par(mfrow = c(1, 3))
+hist(null_A, main = "Test Statistic A")
+hist(null_B, main = "Test Statistic B")
+hist(null_C, main = "Test Statistic C")
+
+```
+
+
+3. To select between these statistics, we would like to choose the statistic which is the most powerful - that is, which statistic is most likely to reject the null hypothesis when the data is actually generated from a right-skewed population. If we simulate from a chi-square distribution with k degrees of freedom, what linear transformation results in data with a mean of 10 and standard deviation of 2.5? 
+
+Use the standard deviation to solve for a:
+
+> $Y = aX + b$
+>
+> $Var(Y) = a^2Var(X) = 2.5^2$
+>
+> $a^2(2k) = 2.5^2$
+>
+> $a = \frac{2.5}{\sqrt{2k}}$
+
+Use the mean to solve for b:
+
+> $E(Y) = aE(X) + b = 10$
+>
+> $aE(X) + b = 10$
+>
+> $\frac{2.5}{\sqrt{2k}}k + b = 10$
+>
+> $b = 10 - \frac{2.5}{\sqrt{2k}}$
+
+The linear transformation that results from a mean of 10 and a standard deviation of 2.5:
+
+> $Y =  \frac{2.5}{\sqrt{2k}} + 10 - \frac{2.5}{\sqrt{2k}}$
+
+4.	Using the transformation in question 3, simulate random samples of size n = 25 from a chi-square distribution with the following degrees of freedom: 5 and 20. Use the simulated data to determine the power of the proposed test statistics. Include comments in your code that clearly indicate which power value is being calculated (e.g. #Statistic 1, df = 5). 
+
+```{r chi_sq_sim}
+# create vecotrs for test statistics for degrees of freedom of 5 and 20
+pvalues_A_df5 = numeric(10000)
+pvalues_B_df5 = numeric(10000)
+pvalues_C_df5 = numeric(10000)
+
+pvalues_A_df20 = numeric(10000)
+pvalues_B_df20 = numeric(10000)
+pvalues_C_df20 = numeric(10000)
+
+for (i in 1:10000){
+  # Simulate test statistics for degrees of freedom = 5
+  sample_df5 = rchisq(25, df = 5)
+  sample_df5_trans = 2.5/sqrt(2*5)*sample_df5 + 10 - 2.5/sqrt(2*5)
+  
+  # Test statistics A,B and C with df = 5
+  ts_A_df5 = ts_A(sample_df5_trans)
+  ts_B_df5 = ts_B(sample_df5_trans)
+  ts_C_df5 = ts_C(sample_df5_trans)
+  
+  pvalues_A_df5[i] = sum(null_A >= ts_A_df5)/10000
+  pvalues_B_df5[i] = sum(null_B >= ts_B_df5)/10000
+  pvalues_C_df5[i] = sum(null_C >= ts_C_df5)/10000
+  
+  # Simulate test statistics for degrees of freedom = 20
+  sample_df20 = rchisq(25, df = 20)
+  sample_df20_trans = 2.5/sqrt(2*20)*sample_df20 + 10 - 2.5/sqrt(2*20)
+  
+  # Test statistics A,B and C for degrees of freedom = 20
+  ts_A_df20 = ts_A(sample_df20_trans)
+  ts_B_df20 = ts_B(sample_df20_trans)
+  ts_C_df20 = ts_C(sample_df20_trans)
+  
+  pvalues_A_df20[i] = sum(null_A >= ts_A_df20)/10000
+  pvalues_B_df20[i] = sum(null_B >= ts_B_df20)/10000
+  pvalues_C_df20[i] = sum(null_C >= ts_C_df20)/10000
+  
+}
+
+# Calculate the power for each test statistic and for both degrees of freedom 
+power_A_df5 = sum(pvalues_A_df5 <= 0.05) / 10000
+power_B_df5 = sum(pvalues_B_df5 <= 0.05) / 10000
+power_C_df5 = sum(pvalues_C_df5 <= 0.05) / 10000
+
+power_A_df20 = sum(pvalues_A_df20 <= 0.05) / 10000
+power_B_df20 = sum(pvalues_B_df20 <= 0.05) / 10000
+power_C_df20 = sum(pvalues_C_df20 <= 0.05) / 10000
+
+```
+
+Test Statistic    |df = 5           |df = 20
+------------------|-----------------|------------
+A                 |`r {power_A_df5}`|`r {power_A_df20}`
+B                 |`r {power_B_df5}`|`r {power_B_df20}`
+C                 |`r {power_C_df5}`|`r {power_C_df20}`
+
+5. Now increase your sample size to n = 50 and determine the power. Note - you'll have to find new null distributions because of the change in sample size. Include comments in your code that clearly indicate which power value is being calculated (e.g. #Statistic 1, df = 5). 
+
+```{r chi_sq_sim2}
+# Calculate null distribution for N = 50
+normal_samples =  replicate(10000, rnorm(50, mean = 10, sd = 2.5))
+
+null_A2 = apply(normal_samples, 2, ts_A)
+null_B2 = apply(normal_samples, 2, ts_B)
+null_C2 = apply(normal_samples, 2, ts_C)
+
+# create vecotrs for test statistics for degrees of freedom of 5 and 20
+pvalues_A2_df5 = numeric(10000)
+pvalues_B2_df5 = numeric(10000)
+pvalues_C2_df5 = numeric(10000)
+
+pvalues_A2_df20 = numeric(10000)
+pvalues_B2_df20 = numeric(10000)
+pvalues_C2_df20 = numeric(10000)
+
+for (i in 1:10000){
+  # Simulate test statistics for degrees of freedom = 5
+  sample2_df5 = rchisq(50, df = 5)
+  sample2_df5_trans = 2.5/sqrt(2*5)*sample2_df5 + 10 - 2.5/sqrt(2*5)
+  
+  # Test statistics A,B and C with df = 5
+  ts_A2_df5 = ts_A(sample2_df5_trans)
+  ts_B2_df5 = ts_B(sample2_df5_trans)
+  ts_C2_df5 = ts_C(sample2_df5_trans)
+  
+  pvalues_A2_df5[i] = sum(null_A2 >= ts_A2_df5)/10000
+  pvalues_B2_df5[i] = sum(null_B2 >= ts_B2_df5)/10000
+  pvalues_C2_df5[i] = sum(null_C2 >= ts_C2_df5)/10000
+  
+  # Simulate test statistics for degrees of freedom = 20
+  sample2_df20 = rchisq(50, df = 20)
+  sample2_df20_trans = 2.5/sqrt(2*20)*sample2_df20 + 10 - 2.5/sqrt(2*20)
+  
+  # Test statistics A,B and C for degrees of freedom = 20
+  ts_A2_df20 = ts_A(sample2_df20_trans)
+  ts_B2_df20 = ts_B(sample2_df20_trans)
+  ts_C2_df20 = ts_C(sample2_df20_trans)
+  
+  pvalues_A2_df20[i] = sum(null_A2 >= ts_A2_df20)/10000
+  pvalues_B2_df20[i] = sum(null_B2 >= ts_B2_df20)/10000
+  pvalues_C2_df20[i] = sum(null_C2 >= ts_C2_df20)/10000
+  
+}
+
+# Calculate the power for each test statistic and for both degrees of freedom 
+power_A2_df5 = sum(pvalues_A2_df5 <= 0.05) / 10000
+power_B2_df5 = sum(pvalues_B2_df5 <= 0.05) / 10000
+power_C2_df5 = sum(pvalues_C2_df5 <= 0.05) / 10000
+
+power_A2_df20 = sum(pvalues_A2_df20 <= 0.05) / 10000
+power_B2_df20 = sum(pvalues_B2_df20 <= 0.05) / 10000
+power_C2_df20 = sum(pvalues_C2_df20 <= 0.05) / 10000
+
+```
+
+Test Statistic     |df = 5            |df = 20
+-------------------|------------------|------------
+A2                 |`r {power_A2_df5}`|`r {power_A2_df20}`
+B2                 |`r {power_B2_df5}`|`r {power_B2_df20}`
+C2                 |`r {power_C2_df5}`|`r {power_C2_df20}`
+
+6. Based on your calculations, which statistic of these 3 would you recommend when testing for skewness in a distribution? Explain. 
+
+I would use statistic B for testing skewness in a distribution.  When considering different degrees of freedom and different sample sizes, statistic B generated the most power of the three statistics under every scenario.  Statistic B produced the highest probability for a correct decision - correctly rejecting the null hypothesis when it was false. 
+

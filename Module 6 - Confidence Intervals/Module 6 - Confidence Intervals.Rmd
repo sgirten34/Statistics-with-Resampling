@@ -1,0 +1,383 @@
+---
+title: "Module 6 - Confidence Intervals"
+author: "Buckley"
+date: "March 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Confidence Intervals {.tabset .tabset-pills .tabset-fade}
+
+### Bootstrap Percentile Intervals
+
+A statistic calculated from the sample provides an estimate of the true value of the pouplation parameter, but the likelihood it is exactly equal to the value of the parameter is 0. For example, the sample mean $\bar{y}$ is an estimator of the true mean $\mu$, but it is not exact. A confidence interval produces a range of possible values for the unknown parameter. 
+
+**Example:** Back to the telephone repair time example ... We had determined there was convincing evidence repair times differed for Verizon customers when compared to those using a competing service. Suppose we wanted to estimate the average repair time for customers using a competing service. 
+
+```{r verizon_data}
+#install.packages("resampledata")
+library(resampledata)
+data(Verizon)
+
+verizon <- subset(Verizon, select = Time, subset = Group == "ILEC", drop = TRUE)
+comp <- subset(Verizon, select = Time, subset = Group == "CLEC", drop = TRUE)
+```
+
+Suppose we wanted to estimate the mean repair time with 95% confidence. 
+
+The classic approach would be to use a confidence interval for the mean based on the t-distsribution.  The formula for the interval is $\bar{y} \pm t_{\frac{\alpha}{2}, n-1}\Bigg(\frac{s}{\sqrt{n}}\Bigg)$.  R will calculate the interval using the function t.test.  
+
+```{r comp_t_interval}
+t.test(comp)$conf.int
+
+```
+
+Interpret: With 95% confidence, we estimate the true mean repair length for customers using a competing service is between 8.0752 hours and 24.9431 hours.
+
+The calculation of this interval relied upon some validity assumptions:
+
+* The population of all repair times is normally distributed - if we assume the sample is a reasonable approximation of the population, normality could not be assumed.  And, the sample size is not very large to overcome lack of normality.
+
+* The sample was selected randomly from the population.
+
+*****
+
+The bootstrap distribution gives another mechanism by which estimation can be made.  Recall that the bootstrap distribution serves as an estimate for the sampling distribution of the statistic.  In other words, the bootstrap distribution is comprised of values of the statistic we would expect to observe from repeated sasmples taken from the population.  Using the bootstrap distribution, we can find percentiles of the distribution so that 95% of the bootstrap statistics are contained in an interval.  This is known as a **bootstrap percentile confidence interval**.
+
+Let's use the traditional bootstrap to find a 95% bootstrap percentile interval for the mean repair time:
+
+```{r comp_percentile_interval_mean}
+bootstrap.mean = numeric(10000)
+
+for (i in 1:10000){
+  bootstrap.sample = sample(comp, length(comp), replace = T)
+  bootstrap.mean[i] = mean(bootstrap.sample)
+}
+
+hist(bootstrap.mean, main = "Bootstrap Distn of the Mean", xlab = "Bootstrap Mean")
+abline(v=quantile(bootstrap.mean, probs = 0.025), col="red", lwd=2)
+abline(v=quantile(bootstrap.mean, probs = 0.975), col="red", lwd=2)
+abline(v=mean(bootstrap.mean), col="blue", lty=2, lwd=2)
+```
+
+Interpret: With 95% confidence, we estimate the true mean repair length for customers using a competing service is between `r quantile(bootstrap.mean, probs = 0.025)` hours and `r quantile(bootstrap.mean, probs = 0.975)` hours.
+
+Let's compare the 2 intervals:
+
+The interval constructed from the t-distribution is centered at the value of $\bar{y}$.  This is not true for the bootstrap interval.  Its lower limit is closer to the mean than its upper limit - this reflects the skew that is seen in the bootstrap distribution of the smaple mean.  The bootstrap interval has a width of  `r quantile(bootstrap.mean, probs = 0.975)` -`r quantile(bootstrap.mean, probs = 0.025)`, while the t-interval has a width of `r t.test(comp)$conf.int[2] - t.test(comp)$conf.int[1]`.  In general, a narrower interval is preferred, and the bootstrap interval accomplished this task.  
+
+*****
+
+The bootstrap approach is one that can be applied to any statistic of interest.  Given that this is the case, it would be nice to have a function that returns the percentile interval.  
+
+```{r percentile_function}
+percentile.interval = function(bootstrap.distn, loc=0.95){
+  l.limit = quantile(bootstrap.distn, probs = (1-loc)/2)
+  u.limit = quantile(bootstrap.distn, probs = (1-loc)/2 + loc)
+  return (c(l.limit, u.limit))
+}
+
+
+```
+
+Suppose we wanted to use the bootstrap approach to estimate the difference in the mean repair times for Verizon customers & customers from their competitors.  
+
+* Take a sample of size *m* from the first sample (Verizon) with replacement and compute the sample mean repair time.  Then, take another sample of size *n* from the second sample (Competitor) with replacement and compute the sample mean repair time.  Calculate the difference in the boostrap means.  
+
+* Repeat this process 10,000 times to build up the bootstrap distribution of the difference in sample means.  
+
+* Use the percentile.interval function to return the estimated interval.  
+
+```{r bootstrap_interval_2means}
+bootstrap.verizon = replicate(10000, sample(verizon, length(verizon), replace = T))
+verizon.mean = apply(bootstrap.verizon, 2, mean)
+
+bootstrap.comp = replicate(10000, sample(comp, length(comp), replace = T))
+comp.mean = apply(bootstrap.comp, 2, mean)
+
+bootstrap.diff.mean = verizon.mean - comp.mean
+
+hist(bootstrap.diff.mean, main = "Bootstrap Distn for the Difference in Means")
+abline(v=quantile(bootstrap.diff.mean, probs = c(0.025, 0.975)), col="red", lwd=2)
+
+percentile.interval(bootstrap.diff.mean)
+
+
+```
+
+With 95% confidence, the mean repair time for Verizon customers is between `r abs(percentile.interval(bootstrap.diff.mean)[2])` hours and `r abs(percentile.interval(bootstrap.diff.mean)[1])` hours less than the mean for customers using their competitors.  
+
+*****
+
+There are other types of bootstrap intervals that can be calculated:
+
+* Bootstrap percentile interval
+
+* Bootstrap percentile interval with smoothing
+
+* Bootstrap t interval (mean only)
+
+* Bootstrap critical value interval (bootstrap within the bootstrap)
+
+### Bootstrap t Interval
+
+Let's investigate the **bootstrap t** interval.  As noted earlier, the traditional approach to estimating the mean applies this formula: $\bar{y} \pm t_{\alpha/2, n-1}\Bigg(\frac{s}{\sqrt{n}}\Bigg)$.  What would it look like if we estimated the actual distribution of the t-statistic using bootstrapping techniques instead of just assuming an underlying t-distribution?
+
+The repair times we have been using were incredibly right-skewed, which made us question the normality of the underlying population.  If the normality of the population is in question then we are no longer guaranteed the quantity $\frac{\bar{Y}-\mu}{\frac{s}{\sqrt{n}}}$ follows a t-distribution.  We can use the bootstrap approaches to estimate the distribution of this statistic.  To do this, we'll use the following approach:
+
+* Take a boostrap sample, with replacement, from the original sample.
+
+* Calculate the bootstrap mean $\bar{Y}^*$, and the bootstrap sample standard deviation, $S^*$
+
+ Compute a resample $T^*$ statistic: $T^* = \frac{\bar{Y}^*-\bar{y}}{\frac{S^*}{\sqrt{n}}}$.  Note the value subtracted from the bootstrap mean in the numerator is the original sample mean.
+
+* Repeat this process a total of 10,000 times until a distribution $T^*$ values are constructed.
+
+* To estimate the mean, we can use the following: $\Bigg(\bar{Y}-\hat{Q}_{1-\alpha/2}\frac{s}{\sqrt{n}}, \bar{Y}-\hat{Q}_{\alpha/2}\frac{s}{\sqrt{n}}\Bigg)$.  In the interval, $\hat{Q}$ are estimated quantiles from the bootstrap t distribution.  
+
+
+Use the approach to estimate the mean service time for customers using competing services with 95% confidence:
+
+```{r bootstrap_t_comp}
+# use the replicate function to generate 10,000 resamples from the data
+bootstrap.resamples = replicate(10000, sample(comp, length(comp), replace = T))
+
+# For each resample, calculate its mean and standard deviation
+bootstrap.mean = apply(bootstrap.resamples, 2, mean)
+bootstrap.sd = apply(bootstrap.resamples, 2, sd)
+
+# Calculate the resample t statistic
+bootstrap.t = (bootstrap.mean - mean(comp)) / (bootstrap.sd/sqrt(length(comp)))
+
+
+hist(bootstrap.t, main = "Bootstrap Distn of T", freq = F, xlim = c(-7, 3), ylim = c(0, 0.4))
+par(new=T)
+curve(dt(x, df=26), from= -7, to = 3, ylim=c(0,0.4), col="red", lwd=2)
+abline(v=quantile(bootstrap.t, probs = c(0.025, 0.975)), lwd=2, lty=2)
+abline(v=qt(p=c(0.025, 0.975), df=26), col="red")
+
+# Lower limit
+mean(comp) - quantile(bootstrap.t, prob=0.975)*sd(comp)/sqrt(length(comp))
+
+# Upper limit
+mean(comp) - quantile(bootstrap.t, prob=0.025)*sd(comp)/sqrt(length(comp))
+
+```
+
+The bootstrap t distribution has far more skew than the t-distribution we would have used based upon theory.  This influences the quantiles used in calculating the interval.  We no longer anticipate quantiles equidistant from the mean of 0.  The calculated interval is no longer centered at the sample mean; it also reflects the likely right-skew of the population with a larger positive margin of error.
+
+Let's write a function that will return the bootstrap t interval for the mean for any vector of data values:
+
+```{r bootstrap_t_interval_fcn}
+bootstrapt.interval = function(data, loc=0.95){
+  bootstrap.resamples = replicate(10000, sample(data, length(data), replace = T))
+  bootstrap.means = apply(bootstrap.resamples, 2, mean)
+  
+  bootstrap.sd = apply(bootstrap.resamples, 2, sd)
+  bootstrap.t = (bootstrap.means - mean(data)) / (bootstrap.sd/sqrt(length(data)))
+  
+  q1 = quantile(bootstrap.t, probs = (1-loc)/2)
+  q2 = quantile(bootstrap.t, probs = 1-(1-loc)/2)
+  
+  l.limit = mean(data) - q2*sd(data)/sqrt(length(data))
+  u.limit = mean(data) - q1*sd(data)/sqrt(length(data))
+  
+  return(c(l.limit, u.limit))
+  
+}
+
+
+```
+Check the function: `r bootstrapt.interval(comp)`
+
+How can we apply this approach to other statistics?  For example, what if we wanted to use the bootstrap t approach to estimate the median?  In this case, we're a bit stuck because we no longer know the estimated standard error the median (the estimated standard error of the sample mean was $\frac{s}{\sqrt{n}}$).  In other words, we don't know what to put in the denominator of our calculated "t".....but, we can use a bootstrap within a bootstrap to estimate the standard error of the statstic in question.  
+
+* Take a resample with replacement from the original sample (first bootstrap).
+
+* Calculate the statistic of interest for the bootstrap resample.
+
+* To estimate the standardized values (critical values) for each sample, we need to take 100 bootstrap samples from the initial bootstrap sample (second bootstrap).  For each new bootstrap sample, we'll calculate the statistic of interest.  Then, to estimate the standard error, we'll find the standard deviation of the 100 bootstrap statistics.
+
+* Using the estimated standard error, we can calculate the standardidzed critical value for the original bootstrap sample.  $CV = \frac{\text{bootstrap statistic - sample statistic}}{\text{estimated std error}}$
+
+* Repeat this process until 10,000 critical values have been calculate.  Use thest in construction of the interval (like we did with the bootstrap t).
+
+```{r bootstrap_cv_median}
+bootstrap.cv = numeric(10000)
+bootstrap.median = numeric(10000)
+est.std.error = numeric(10000)
+
+for(i in 1:10000){
+  bootstrap.sample = sample(comp, length(comp), replace = T)
+  bootstrap.median[i] = median(bootstrap.sample)
+  
+  # Estimate the standard error of the median using a second bootstrap
+  bootstrap2 = replicate(100, sample(bootstrap.sample, length(bootstrap.sample), replace = T))
+  est.std.error[i] = sd(apply(bootstrap2, 2, median))
+  
+  bootstrap.cv[i] = (bootstrap.median[i] - median(comp)) / est.std.error[i]
+  
+}
+
+hist(bootstrap.cv)
+
+hist(est.std.error)
+abline(v=mean(est.std.error), col="red", lwd=2)
+abline(v=sd(bootstrap.median), col="blue", lwd=2, lty=2)
+
+# lower limit
+llimit = median(comp) - quantile(bootstrap.cv, probs = 0.95)*sd(bootstrap.median)
+
+# upper limit
+ulimit = median(comp) - quantile(bootstrap.cv, probs = 0.05)*sd(bootstrap.median)
+
+```
+
+With 90% confidence, we estimate the median repair time for customers using a competing service falls between `r llimit` and `r ulimit` hours.
+
+### Assessing Interval Coverage
+
+When we calculate a confidence interval. we reference some level of confidence.  What does the level of confidence mean?
+
+When using 95% confidence, we expect 95% of random samples from the population to result in intervals that contain the true value of the parameter being estimated.  
+
+Let's see how this works.  Suppose we take samples of size 25 from a normal population with a mean of 30 and standard deviation of 5.  This population satisfies the assumptions for using the t-distribution for inference.  Let's compare the coverage of the following intervals based on 200 samples from the population:
+
+* Traditional t interval
+
+* Bootstrap percentile interval
+
+* Smoothed bootstrap percentile interval
+
+* Bootstrap t interval (without smoothing)
+
+```{r int_coverage}
+# storage matrices for output
+t.interval = matrix(nr=200, nc=3)
+boot.interval = matrix(nr=200, nc=3)
+smboot.interval = matrix(nr=200, nc=3)
+boot.t.interval = matrix(nr=200, nc=3)
+
+for (i in 1:200) {
+  sample.data = rnorm(25, mean = 30, sd = 5)
+  boot.sample = replicate(10000, sample(sample.data, length(sample.data), replace = T))
+  noise = replicate(10000, rnorm(25, mean = 0, sd  = sd(sample.data) / sqrt(length(sample.data))))
+  
+  # Calculate the traditional t-interval
+  t.interval[i,1:2] = t.test(sample.data)$conf.int[1:2]
+  t.interval[i,3] = ifelse(t.interval[i,1] <= 30 && t.interval[i,2] >= 30, 1, 0)
+  
+  # Calculate the bootstrap percentile interval
+  boot.mean = apply(boot.sample, 2, mean)
+  boot.interval[i, 1] = quantile(boot.mean, probs = 0.025)
+  boot.interval[i, 2] = quantile(boot.mean, probs = 0.975)
+  boot.interval[i, 3] = ifelse(boot.interval[i, 1] <= 30 && boot.interval[i, 2] >= 30, 1, 0)
+  
+  # Calculate the smoothed bootstrap percentile interval
+  smboot.mean = apply(boot.sample + noise, 2, mean)
+  smboot.interval[i, 1] = quantile(smboot.mean, probs = 0.025)
+  smboot.interval[i, 2] = quantile(smboot.mean, probs = 0.975)
+  smboot.interval[i, 3] = ifelse(smboot.interval[i, 1] <= 30 && boot.interval[i, 2] >= 30, 1, 0)
+  
+  # Calculate the bootstrap t interval
+  boot.t.interval[i, 1:2] = bootstrapt.interval(sample.data)
+  boot.t.interval[i, 3] = ifelse(boot.t.interval[i, 1] <= 30 && boot.t.interval[i, 2] >= 30, 1, 0)
+}
+
+
+```
+
+
+Interval | Covereage | Average Width
+---------|-----------|----------------
+Traditional t | `r mean(t.interval[,3])` | `r mean(t.interval[,2] - mean(t.interval[,1]))`
+Bootstrap Percentile | `r mean(boot.interval[,3])` | `r mean(boot.interval[,2] - mean(boot.interval[,1]))`
+Smoothed Bootstrap Percentile | `r mean(smboot.interval[,3])` | `r mean(smboot.interval[,2] - mean(smboot.interval[,1]))`
+Bootstrap t | `r mean(boot.t.interval[,3])` | `r mean(boot.t.interval[,2] - mean(boot.t.interval[,1]))`
+
+*****
+
+### Applying the Bootstrap to Categorical Data
+
+**Example:**  The CDC recommends flu vaccine for all adults.  A sample of 324 adults was taken and asked whether they had received a flu vaccine.  In addition, the age of each individual was categorized.  A table of responses is below:
+
+Age | Vaccine - No | Vaccine - Yes
+-------|-------|--------
+18-49  | 70 | 36
+50-64  | 55 | 48
+65+    | 38 | 77
+
+Estimate the proportion of US adults who receive a flu vaccine with 95% confidence.  Use the traditional bootstrap percentile interval and the critical value approach. 
+
+```{r flu_percentileCI}
+# Create a vector of 0's and 1's where 1 represents a vaccinated individual.
+vaccine = c(rep(0, 70+55+38), rep(1, 36+48+77))
+
+# Traditional bootstrap
+bootstrap.samples = replicate(10000, sample(vaccine, length(vaccine), replace = T))
+
+bootstrap.phat = apply(bootstrap.samples, 2, mean)
+
+hist(bootstrap.phat, main = "Bootstrap Distribution of the Sample Proportion")
+sd(bootstrap.phat)
+
+#Interval limits
+quantile(bootstrap.phat, probs = c(0.025, 0.975))
+
+```
+
+With 95% confidence, we estimate between `r quantile(bootstrap.phat, probs = 0.025)*100%` and `r quantile(bootstrap.phat, probs = 0.975)*100%` of US adults receive a flu vaccine.
+
+We can also make modifications to the bootstrap t approach to reflect that proportions are being estimated.  The critical value calculated for each bootstrap resample is: $z* = \frac{\hat{p}^*-\hat{p}}{\sqrt{\frac{\hat{p}^*(1-\hat{p}^*)}{n}}}$
+
+```{r flu_cvCI}
+vaccine = c(rep(0, 70+55+38), rep(1, 36+48+77))
+
+# Traditional bootstrap
+bootstrap.samples = replicate(10000, sample(vaccine, length(vaccine), replace = T))
+
+bootstrap.cv = (bootstrap.phat - mean(vaccine)) / sqrt(bootstrap.phat*(1-bootstrap.phat) / length(vaccine))
+
+hist(bootstrap.cv, main = "Bootstrap z Critical Values")
+
+# Critical values
+quantile(bootstrap.cv, probs = c(0.025, 0.975))
+
+# Interval limits
+l.limit = mean(vaccine) - quantile(bootstrap.cv, probs = 0.975)*sqrt(mean(vaccine)*(1-mean(vaccine)) / length(vaccine))
+u.limit = mean(vaccine) - quantile(bootstrap.cv, probs = 0.025)*sqrt(mean(vaccine)*(1-mean(vaccine)) / length(vaccine))
+
+
+```
+
+With 95% confidence, we estimate between `r l.limit*100`% and `r u.limit*100`% of US adults receive the flu vaccine.
+
+
+All of the bootstrap techniques we've considered thus far have been non-parametric.  Estimates were all constructed based on the observed sample data with no other assumptions.  There is also a *parametric* form of the bootstrap that attempts to estimate the underlying population.  This works really well when the data collected is categorical.  In this situation, we would assume the data came from a Binomial population with n = 324.  However, we would estiamte the likelihood of success, p, from out observed data using $\hat{p}$.  Instead of resampling from the observed data, we would take a random sample from a Binomial population with a specific n and p and then calculate the sample proportion.  The collection of sample proportions would be from the parametric bootstrap distribution. 
+
+```{r parametric_bootstrap}
+phat = mean(vaccine)
+
+#the function rbinom will generate a binomial random variable.  The inputs are n (number of values to generate), size (number of trials), and prob (liklihood of sucess).
+
+phat.parametric = rbinom(10000, size=324, prob = phat) / length(vaccine)
+
+hist(phat.parametric, main = "Parametric Bootstrap Distn of the Sample Proportion")
+sd(phat.parametric)
+# this should estimate sqrt(phat(1-phat)/n)
+
+# To calculate an interval, we can use percentile methods to pluck off the lower and upper limits
+
+quantile(phat.parametric, probs = c(0.025, 0.975))
+```
+
+A few notes on the parametric bootstrap:
+
+* This approach is difficult to implement when the data is continuous.  To do this, we would assume an underlying continuous population, and it's difficult to know what contiuous distribution to use as a parametric representation (normal, uniform, exponential, Gamma, Weibull, some mixed distributions, chi-squrare, etc.).
+
+* It can work reasonably well when using a Binomial distribution.  However, if the true proportion is close to 0 or 1, then the data generated may result in no successes or all successes.  in order to corrrect for this, it's common to adjust the sample proportion using an Agresti-Coull modification.  This is essentially adding 2 to the numerator and 4 to the denominator when calculating the sample proportion.  Then, for example, if 0 successes were observed, the resulting sample proportion would be some value very close to 0 as opposed to being 0.
+
+
+

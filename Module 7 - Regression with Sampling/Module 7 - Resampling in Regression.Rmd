@@ -1,0 +1,449 @@
+---
+title: "Module 7 - Regression with Resampling"
+author: "Buckley"
+date: "April 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Example:** The file posted on Canvas contains the finish times for a sample of runners in the 2015 Flying Pig Marathon. Also recorded was the length of time it took each runner to finish the first 13.1 miles of the course. Suppose we want to develop a model to predict finish time based upon split time. 
+
+```{r marathon}
+marathon = read.csv("flying pig.csv", header = T)
+
+split = marathon$Split.13.1
+finish = marathon$Finish.26.2
+```
+
+First, let's visually inspect the relationship by creating a scatterplot:
+
+```{r marathon_scatterplot}
+plot(x = split, y = finish, pch=16, xlab = "Split time (13.1)", ylab = "Finish time (26.2)")
+
+```
+
+The scatterplot shows that as a runner's split time increases their finish time also increases.  The pattern observed suggests the relationship could be modeled with a linear function.  The linear model is defined as $y = \beta_0 + \beta_1x + \epsilon$.  $\beta_0$ and $\beta_1$ are parameters whose estimates can be obtained from the observed data.  Because the model is not deterministic, an error term, $\epsilon$, is included.  The errors are generally assumed to follow a normal distribution with mean 0 and standard deviation $\sigma_e$.  
+
+The model is fit to the data using the method of least squares - that is, the sum of the squared distance for each point to the line is minimized.  To fit a linear model in R, the function lm is used.  The input is the relationship to be modeled in the form y~x.
+
+```{r marathon_regression}
+summary(lm(finish~split))
+
+# Add the line of best fit to the scatterplot
+plot(x = split, y = finish, pch=16, xlab = "Split time (13.1)", ylab = "Finish time (26.2)")
+abline(lm(finish~split), col="red", lwd=3)
+
+
+
+```
+
+In the regression output, we were given a p-value that tested the significance of the linear relationship (< 2e-16).  If there is no relationship between the two variables, then average finish time would be the same regardless of split time.  This corresponds to observing a line with a slope of 0 (a horizontal line).  We can use a permutation test to determine if the linear relationship is significant.  To do this, we'll simulate the null distribution of the slope assuming there is no relationship between the variables.  
+
+# {.tabset}
+
+## Permutation Test for the Slope
+
+In a permutation test, we typically think about "shuffling" the data.  What will it look like to shuffle our ordered pairs?  If we assume there is no relationship between the two times, then any one finish time can be randomly assigned to a split time.  To do this, we will "shuffle" the finish times, align them with the vector of split times, and fit the linear model.  Let's see what one iteration of this returns:
+
+```{r marathon_permutation}
+finish.permute = sample(finish, length(finish))
+
+par(mfrow=c(1,2))
+#Line of best fit
+plot(x=split, y=finish, pch=16, xlab = "Split time (13.1)", ylab = "Finish time (26.2)", main = "Observed Data")
+abline(lm(finish~split), col="red", lwd=3)
+
+plot(y=finish.permute, x=split, pch=16, main = "Shuffled Data")
+abline(lm(finish.permute~split), col="red", lwd= 3)
+
+```
+
+Now let's repeat this process to form the null distribution of the slope: 
+
+```{r marathon_nullDistn_slope}
+null.slope = numeric(9999)
+
+for (i in 1:9999){
+  finish.permute = sample(finish, length(finish))
+  
+  null.slope[i] = summary(lm(finish.permute~split))$coefficients[2,1]
+}
+
+hist(null.slope, main = "Null Distn", xlab = "Slope")
+
+```
+
+$H_0: \beta_1 = 0$ (no relationship between times)
+$h_a: \beta_1 \ne 0$ (some relationship between times)
+
+TS: slope = $b_1$ =  `r summary(lm(finish~split))$coefficients[2,1]`
+
+pvalue = `r (sum(null.slope <= -1 * abs(summary(lm(finish~split))$coefficients[2,1])) + sum(null.slope >= abs(summary(lm(finish~split))$coefficients[2,1])) + 1) / 10000`
+
+Because the p-value is so small, there is significant evidence of a positive linear relationship between a runner's split time and their finish time in the Flying Pig.
+
+## Bootstrap Distn of the Slope
+
+Notice in the output for the model, a standard error reported for the slope.  This estimates variability in slope estimates from sample-to-sample of runners.  We can use bootstrap techniques to find the distribution for the slope:
+
+```{r bootstrap_slope}
+boot.slope = numeric(10000)
+
+for(i in 1:10000){
+  index = sample(length(split), length(split), replace = T)
+  boot.slope[i] = summary(lm(finish[index]~split[index]))$coefficients[2,1]
+}
+
+# Create a histogram of the bootstrap distribution
+hist(boot.slope, main = "Bootstrap Distn", xlab = "Slope")
+mean(boot.slope)
+sd(boot.slope)
+
+```
+
+Using the bootstrap distribution, the percentile interval for the slope can calculated:
+
+```{r slope_interval}
+# lower_limit
+quantile(boot.slope, probs = 0.025)
+
+# upper limit
+quantile(boot.slope, probs = 0.975)
+
+```
+
+With 95% confidence, we estimate that for every additional hour it takes to complete 13.1 miles the final time it takes to complete the marathon is expected to increase by between `r quantile(boot.slope, prob = 0.025)` hours and `r quantile(boot.slope, prob = 0.975)` hours.
+
+## Bootstraping the Residuals
+
+In the linear model ($y = \beta_0 + \beta_1x + \epsilon$), the independent predictor variable (x) is often thought of as fixed, while the dependent response variable (y) is the one that varies.  In our example, several individuals could all have the same split time of 2 hours, but each of their finish times will likely be different.  The reason the response variable has variabiity is because of the random error term, $\epsilon$.  Perhaps when we employ the bootstrap, we should take random sample, with replacement, of the residuals.  
+
+How would this approach work?
+
+* Fit the linear model and store the residuals.  The residuals measure the descrepancy between the observed y-values and the predicted y-values.  
+
+* Take a bootstrap sample from the residuals
+
+* The resampled residuals could go with any one of the predicted values.  Add the bootstrap residuals to the predicted y-values to obtain new bootstrapped response values.  
+
+* Fit a new linear model using the bootstrap-adjusted y-values and the predictor.  Store the statistic of interest (in our case, we'll first look at the slope).
+
+* Repeat this process a total of 10,000 times.
+
+```{r bootstrap_residuals}
+# Store the residuals from the original linear model
+residuals = lm(finish~split)$residuals
+hist(residuals)
+
+#Bootstrap sample of the residuals
+boot.residuals = sample(residuals, length(residuals), replace = T)
+
+#Store the fitted values from the original linear model
+fitted.y = lm(finish~split)$fitted.values
+
+boot.y = fitted.y + boot.residuals
+plot(x=split, y=boot.y, pch=16)
+
+boot.slope = numeric(10000)
+
+for(i in 1:10000){
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.y = fitted.y + boot.residuals
+  boot.slope[i] = lm(boot.y~split)$coefficients[2]
+}
+
+hist(boot.slope, main = "Bootstrap Distn of the Slope")
+abline(v=mean(boot.slope), col="red", lwd=3)
+abline(v=lm(finish~split)$coefficients[2], col="blue", lty=2, lwd=2)
+
+```
+
+Notice that when the bootstrap procedure was performed on the residuals, the standard error of the slope now aligns with the estimate given from the original linear model.  
+
+*****
+
+What if we wanted to use the model for predictioin & estimation?  Suppose we were interested in a split time of 2 hours.  The linear model can be used to predict the finish time: $y = 0.00716 + 2.12319(2) = 4.23922$ hours.
+
+We can also ask R to do the prediction using the predict.lm function.  In the function, the first input is the lm function with the relationship that is modeled.  The second input is the value of the predictor - this must be stored as a data frame for the function to return predictions.  
+
+```{r prediction}
+new.obs = data.frame(split=2)
+predict.lm(lm(finish~split), newdata = new.obs)
+```
+
+What does this quantity acutally estimate?  It estimates two pieces of information:
+
+* Estimating the **mean** finish time for **all** runners with a split time of 2 hours in the Flying Pig. (Confidence Interval)
+
+* The finish time for an **individaul** runner with a split time of 2 hours in the Flying Pig. (Prediction Interval)
+
+The estimate provided from the fitted line is just a point estimate for these quantities - there is no confidence in the estimate.  We can use bootstrap approaches to generate intervals.
+
+First, let's consider the confidence interval estimating the mean finish time for all runners with a split time of 2 hours:  
+
+```{r confidence_interval_regression}
+#Parametric Confidence Interval for the Mean
+predict.lm(lm(finish~split), newdata = data.frame(split=2), interval = "confidence")
+
+#Bootstrap approaches
+boot.pred.y = numeric(10000)
+
+for(i in 1:10000){
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.y = fitted.y + boot.residuals
+  boot.pred.y[i] = predict.lm(lm(boot.y~split), newdata = data.frame(split=2))
+}
+  
+hist(boot.pred.y, main = "Bootstrap Distn for Finish Time w/ 2 hour split")
+abline(v=quantile(boot.pred.y, prob = c(0.025, 0.975)), col="red", lty=2, lwd=3)
+
+#Bootstrap approaches - storing bootstrap predicted errors
+conf.error = numeric(10000)
+
+for(i in 1:10000){
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.y = fitted.y + boot.residuals
+  boot.pred.y[i] = predict.lm(lm(boot.y~split), newdata = data.frame(split=2))
+  conf.error[i] = predict.lm(lm(finish~split), newdata = data.frame(split=2)) - boot.pred.y[i]
+}
+
+hist(conf.error, main = "Bootstrap Error Estimates for a Split of 2 Hours")
+
+# Confidence limits
+pred.y = predict.lm(lm(finish~split), newdata = data.frame(split=2))
+
+# Lower Limit
+pred.y - quantile(conf.error, prob = 0.975)
+
+# Upper Limit
+pred.y + quantile(conf.error, prob = 0.975)
+
+# Compare the bootstrap interval to the traditional parametric confidence interval
+
+predict.lm(lm(finish~split), newdata = data.frame(split = 2), interval = "confidence")
+
+```
+
+How does a prediction interval that predicts the response for a single observation differs from a confidence interval?
+
+First, let's compare the parametric intervals that are based on the t-distribution:
+
+```{r compare_intervals}
+# Parametric confidence interval
+predict.lm(lm(finish~split), newdata = data.frame(split=2), interval = "confidence")
+
+# Parametric prediction interval
+predict.lm(lm(finish~split), newdata = data.frame(split=2), interval = "prediction")
+
+```
+
+When we go calculate a predition interval, we are trying to find an interval that captures the response variable for an *individual* with some degree of confidence.  Individual responses will always have more variability than the mean response for all individuals at a given response.  The result is wider intervals.  
+
+We need a technique that allows us to incorporate additional variability into our bootstrap process.
+
+```{r bootstrap_prediction_interval}
+# Create the prediction error distribution - how far is an individual's finish time from the predicted outcome?
+pred.error = numeric(10000)
+
+# Store the residual from the original model, as well as the fitted values from the original model
+residuals = lm(finish~split)$residuals
+fitted.y = lm(finish~split)$fitted.values
+
+for (i in 1:10000){
+  # Generate bootstraped y-hats
+  boot.residuals = sample(residuals, length(residuals), replace = T)
+  boot.y = fitted.y + boot.residuals
+  
+  # Now use the bootstrapped y-values to fit a new linear model & calculate the predicted value for a split time of 2 hours
+  boot.pred.y = predict.lm(lm(boot.y~split), newdata = data.frame(split=2))
+  
+  # Generate a future value of y - original estimate from the line of best fit plus a random error from the bootstrapped regression model
+  original.pred = predict.lm(lm(finish~split), newdata = data.frame(split=2))
+  add.noise = sample(lm(boot.y~split)$residual, 1)
+  future.y = original.pred + add.noise
+  
+  # For the prediction error, we want to know how far the future y value differed from the bootstrapped predicted y-value
+  pred.error[i] = future.y - boot.pred.y
+  
+}
+
+hist(pred.error, main = "Prediction Errors for a Split time of 2 hours") 
+abline(v=quantile(pred.error, probs = c(0.025, 0.975)), col="red", lty=2)
+#plot(y=boot.y, x=split, pch=16)
+#abline(lm(boot.y~split), col="red")
+
+# lower limit
+original.pred - quantile(pred.error, probs = 0.975)
+
+# upper limit
+original.pred - quantile(pred.error, probs = 0.025)
+
+```
+
+With 95% confidence, we predict an individual running the Flying Pig who has a split time of 2 hours will finish the marathon with a time between `r original.pred - quantile(pred.error, probs = 0.975)` hours and `r original.pred - quantile(pred.error, probs = 0.025)` hours.
+
+## Example
+The dataset posted on Canvas contains the number of classes missed (out of 37) and the final course grade for a sample of STA 205 students. We would like to develop a model which can be used to predict course grade from attendance. 
+
+* Create a scatterplot of the relationship of interest and find the correlation (using the cor() function in R). You'll notice that several students seem to have missed all the classes. Attendance was tracked via a clicker, and these students chose to not purchase a clicker. Remove them from the dataset and regenerate the scatterplot and correlation. What effect did removing this students have? 
+
+```{r course_grades}
+course.grades = read.csv("course grades.csv", header = T)
+
+#plot(x=course.grades$Classes.Missed, y = course.grades$Average, pch=16)
+
+cor(course.grades$Classes.Missed, course.grades$Average)
+
+# Restrict the dataset to only include students with recorded attendance (i.e. no one with 37 absences)
+
+absences = subset(course.grades, subset = Classes.Missed < 37, select = Classes.Missed, drop = T)
+grades = subset(course.grades, subset = Classes.Missed < 37, select = Average, drop = T)
+
+plot(x=absences, y=grades, pch=16)
+cor(absences, grades)
+
+```
+
+
+For the remaining questions, work on the dataset with the removed students who did not purchase a clicker. 
+
+* Fit the regression model to the data collected. What is the estimated regression equation? 
+
+```{r grades_regression_fit}
+
+course.grades.fit = lm(grades~absences)
+course.grades.fit$coefficients
+
+
+```
+
+    The estimated regression equation for predicting grades is: Grades = `r course.grades.fit$coefficients[1]` `r course.grades.fit$coefficients[2]`
+
+* Use a permutation test to determine if the linear relationship between the variables is significant. 
+
+```{r permutationTest}
+null.slope <- numeric(9999)
+
+for(i in 1:9999){
+  absences.shuffle <- sample(absences, length(absences))
+  null.slope[i] <- lm(grades~absences.shuffle)$coefficients[2]
+}
+
+plot(x=absences.shuffle, y=grades, pch=16)
+hist(null.slope, main="Null Dist", xlab="slope")
+
+# Take the observed slope (-1.1759) -- how many of the null distribution slopes were more extreme than that value
+
+
+```
+$H_0: \beta_1 = 0$ (There is not a linear relationship)
+
+$H_a: \beta_1 \ne 0$ (There is a linear relationship)
+
+TS: $b_1$ =`r lm(grades~absences)$coefficients[2]` (The second coefficient for the linear model is slope)
+
+(The null distributions gives you an idea of how much of a difference there is from one set of students to another set of students)
+The null distribution of the slope is how you get the p-value (Find values more extreme than the observed value)
+
+p-value = $\frac{\text{# of null slopes < -1.18} + \text{# of null slopes > 1.18}+1}{9999+1}$ = `r (sum(null.slope < -1*abs(lm(grades~absences)$coefficients[2])) + sum(null.slope > abs(lm(grades~absences)$coefficients[2])) + 1) / (9999+1)`
+
+Because the p-value is so small, there is significant evidence of a negative linear relationship between course average & absences. As the number of absences increases, the expected course average (grade in reported as a percent) decreases.
+
+
+* **Find a 95% bootstrap percentile interval for the intercept by bootstrapping the residuals of the model (you do not have to using smoothing). Interpret the interval.** 
+
+Bootstrap the residuals (Find all the vertical distances and resmaple from those - one residual could just as easily go with another individual)
+
+```{r bootstrap_interval_intercept}
+bootstrap.intercept <- numeric(10000)
+
+residuals <- lm(grades~absences)$residuals
+fitted.y <- lm(grades~absences)$fitted.values #values the regression line predicted
+
+for(i in 1:10000){
+  bootstrap.residuals <- sample(residuals, length(residuals), replace=T)
+  bootstrap.intercept[i] <- lm((fitted.y+bootstrap.residuals)~absences)$coefficients[1]
+}
+
+hist(bootstrap.intercept, main="Bootstrap Dist of the Intercept")
+abline(v=quantile(bootstrap.intercept, probs=c(0.025,0.975)), col="red", lwd=3, lty=2)
+
+```
+
+With 95% confidence, we estimate the **mean course average grade** (recorded as a percent) for students with no absences falls betwreen `r quantile(bootstrap.intercept, probs=0.025)` and `r quantile(bootstrap.intercept, probs=0.975)`(Confidence interval)
+
+
+
+* **The interval found in the previous part is equivalent to a confidence interval estimating the mean grade for a student who misses 0 classes. If an individual student who misses 0 classes is interested in predicting their grade, find the interval which would provide this estimate.** 
+
+
+```{r prediction_interval_bootstrap}
+pred.error <- numeric(10000)
+
+residuals <- lm(grades~absences)$residuals
+fitted.y <- lm(grades~absences)$fitted.values
+
+original.pred <- predict.lm(lm(grades~absences), newdata=data.frame(absences=0)) #Technically this is just the intercept for this model. We just want this to be code that can support changing numbers
+
+for(i in 1:10000){
+  # Generate bootstrapped residuals
+  boot.residuals <- sample(residuals, length(residuals), replace=T)
+  
+  # Bootstrapped y-values from the residuals
+  boot.y <- fitted.y + residuals
+  
+  # Now use the bootstrapped y-values to generate a new linear model and calculate the prediction for 0 absences
+  boot.pred.y <- predict.lm(   lm(boot.y~absences), newdata =data.frame(absences=0)   )
+  
+  # Generate a future value of y-original estimate from the line of best fit plus a random error from the bootstrapped regression model
+  add.noise <- sample(lm(boot.y~absences)$residuals, 1)
+  future.y <- original.pred + add.noise
+  pred.error[i] <- future.y - boot.pred.y #How far off is the future.y from what the model told us we should have? -- prediction error
+  
+}
+
+hist(pred.error, main="Error in Prediction")
+
+l.limit <- original.pred - quantile(pred.error, probs=0.975) # lower limit
+
+u.limit <- original.pred - quantile(pred.error, probs=0.025) # upper limit
+
+l.limit
+u.limit
+
+# "True" parametric interval
+predict.lm(lm(grades~absences), newdata=data.frame(absences=0), interval="prediction")
+
+```
+
+Pick off the 2.5% and 97.5% quantiles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

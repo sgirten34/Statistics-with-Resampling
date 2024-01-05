@@ -1,0 +1,367 @@
+---
+title: "Module 5 - Bootstrap Distributions"
+author: "Girten"
+date: "March 19, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bootstrap Distributions {.tabset .tabset-fade .tabset-pills}
+
+### Motivating Example 
+**Example:** Back to the telephone repair time example ... We had determined there was convincing evidence repair times differed for Verizon customers when compared to those using a competing service. Suppose we wanted to estimate the average repair time for customers using a competing service. 
+
+```{r verizon_data}
+#install.packages("resampledata")
+library(resampledata)
+data(Verizon)
+
+verizon <- subset(Verizon, select = Time, subset = Group == "ILEC", drop = TRUE)
+comp <- subset(Verizon, select = Time, subset = Group == "CLEC", drop = TRUE)
+
+hist(comp, main = "Distribution of Repair Times - Competitors")
+```
+
+We have some issues with traditional approaches. The sample, assuming it was taken randomly, should be a reasonable estimate of the population of repair times. The sample does not suggest normality, and the sample size is not very large. This raises questions over whether or not we can reasonably assume the sampling distribution of the sample mean would be normally distributed, and it throws kinks into our traditional inferences. 
+
+When the pouplation is *unknown* how can we get reasonable approximations for sampling distributions of various statistics? 
+
+(The idea of taking a sample of the population is that we mimic the characteristics of the population)
+
+*****
+
+### Introduction to the Bootstrap
+
+Suppose we are interested in investigation samples from an Exponential population with a mean of 5.  What are characteristics of this population?
+
+```{r exp_population}
+
+curve(dexp(x,rate=1/5), from = 0, to = 25, main = "Exponential Population", lwd = 2, col = "red")
+
+```
+
+* the pdf of the Exponential Distribution if $f(y) = \frac{1}{\beta}e^{\frac{-y}{\beta}}, y>0$
+
+* $\mu = E(Y) = \beta = 5$
+
+* $\sigma^2 = Var(Y) = \beta^2 = 25$
+
+* $\text{Median} = -\beta ln(0.5) = 3.4567$ Median - value that splits the area of y under the curve in half
+
+ Suppose we take a sample of size 16 from this population. What characteristics does the distribution of the sample possess?
+
+
+```{r exp_sample}
+ # the function rexp() generates random samples. The parameters in this fcn is the rate, which is 1/beta.
+
+exp.sample <- rexp(16, rate=1/5)
+
+hist(exp.sample, main="Sample from an Exponential Population", sub="n=16")
+
+mean(exp.sample)
+var(exp.sample)
+
+```
+
+The shape of the sample mimics that of the population.  The sample mean, $\bar{y}$, is `r mean(exp.sample)`.  The sample variance, $s^2$, is `r var(exp.sample)`.  We anticipate these values being close to their population counterparts, but the small sample size leads to quite a bit of variability in the sample statistics.  
+
+In this case, we can simulate the sampling distribution of the sample mean by taking repeated (new) samples from the population and calculating the sample mean for each sample.
+
+```{r exp_sample2}
+# the function rexp() generates random samples. The parameters in this fcn is the rate, which is 1/beta.
+
+sampling.dist.ybar <- apply(replicate(10000, rexp(16, rate=1/5)), 2, mean)
+
+# We can ask R to plot a smooth curve over the histogram using the density() funciton.
+
+ybar.density <- density(sampling.dist.ybar)
+
+hist(sampling.dist.ybar, freq = F, main ="Sampling Distn of the sample mean", sub = "n=16", xlim=c(0,12), ylim=c(0, 0.35))
+par(new=T)
+plot(ybar.density, xlim=c(0,12), ylim=c(0, 0.35), xlab="", ylab="", lwd=2, col="red", main ="")
+
+mean(sampling.dist.ybar)
+var(sampling.dist.ybar)
+
+
+```
+
+The sampling distribution of $\bar{y}$ is slightly right-skewed, but approaching normality even with the small sample size. The mean of the samping distrivution, $\mu_\bar{y}$, is `r mean(sampling.dist.ybar)`. This value is essentially equivalent to our population mean, $\mu=5$. The standard error ( S.E. = standard deviation of a statistic) of the sampling distribution of $\bar{y}$, $\sigma_\bar{y}$, is `r sd(sampling.dist.ybar)`. Theoretical properties of the sampling distribution of $\bar{y}$ tell us this value should be $\frac{\sigma}{\sqrt{n}}$. The estimated standard error generated from the simulated sampling distribution is close in value to 1.25 ($\frac{5}{\sqrt{16}}$).
+
+This is all good *when the population is known*, but this is rarely the case. If the only thing available is the sample, how can we use this information to approximate the sampling distribution of $\bar{y}$?
+
+This is the general question **bootstrap distributions** seek to answer. The basic idea is this: The original sample is an approximation from the population from which it was drawn (this, of course, assumes the sample was chosen in a random manner). So, resamples from this *sample* can be used to approximate what we would get if we took many samples from the population.
+
+(Problem -- calculating variability uses n in the sqrt -- the way to do this is to sample with replacement, or in Dr. Buckley's words:)
+
+If we were to take resamples from the sample **without replacement** and compute some statistic for each resample, the results of the simulation would be boring. There is only 1 possible resample, which would always return the same value of the statistic. The solution to this problem is to generate random resamples from the smaple **with replacement**. For each of the resamples, we will calculate the statistic of interest.The distribution of the calculated statistic is called its **bootstrap distribution**.
+
+Suppose we want to generate the bootsrap distribution of the smaple mean based on our previous sample of 16 observations from the Exponential distribution. 
+
+```{r bootstrap_distn_mean}
+bootstrap.dist.ybar <- numeric(10000)
+
+for(i in 1:10000){
+  bootstrap.sample <- sample(exp.sample, 16, replace=T)  # REPLACE = T IS THE TRICK TO THIS. If you put replace = F, you will get the same exact sample over and over
+  bootstrap.dist.ybar[i] <- mean(bootstrap.sample)
+}
+
+hist(bootstrap.dist.ybar, freq=F, main="Bootstrap Distn of the Sample Mean", xlim=c(0,12), ylim=c(0, 0.35))
+ybar.bootstrap.density <- density(bootstrap.dist.ybar)
+par(new=T)
+plot(ybar.bootstrap.density, xlim=c(0,12), ylim=c(0, 0.35), xlab="", ylab="", main="", col="red", lwd=2)
+
+
+```
+
+Let's plot the four distributions in one panel (population, sampling distribution of the mean, sample, bootstrap distribution of the mean):
+
+```{r comparing_distns}
+par(mfrow=c(2,2))
+
+#population
+curve(dexp(x, rate=1/5), from=0, to=25, main = "Exponential population", lwd=2, col="red")
+abline(v=5, col="red", lty=2)       #lty = line type, 2 = dashed line
+
+#sampling distribution of the mean
+hist(sampling.dist.ybar, freq = F, main ="Sampling distribution of the sample mean", sub = "n=16", xlim=c(0,12), ylim=c(0, 0.35))
+abline(v=mean(sampling.dist.ybar), col="red", lty=2)
+
+#sample
+hist(exp.sample, main="Sample")
+abline(v=mean(exp.sample), col="red", lty=2)
+
+#bootstrap distribution of the mean
+hist(bootstrap.dist.ybar, freq=F, main="Bootstrap distribution of the Sample Mean", xlim=c(0,12), ylim=c(0, 0.35))
+abline(v=mean(bootstrap.dist.ybar), col="red", lty=2)
+
+
+
+```
+
+Population vs. Sample: The shape of the sample should reasonably mimic the shape of the population (assuming the sample was random).  The calculation of statistics from the sample (mean, standard deviation, median, etc.) should be close in value to the corresponding population parameters.  The larger the sample size, the closer in value we expect the statistic & parameter to be because the standard error of the sampling distribution of the statistic decreases.
+
+Sampling distribution vs. Bootstrap Distribution: The sampling distribution of a statistic has a comparable shape to the bootstrap distribution of the statistic.  The sampling distribution of the statistic centers over the true value of the population parameter.  So, the sampling distribution of the sample mean centered over the population mean.  The bootstrap distribution of a statistic centers over the observed value of that statistic in the original sample.  So, the bootstrap distribution of the smaple mean centers over the original value of the sample mean.  The spread of a bootstrap distriubtion for some statistic is a reasonable approximation of the spread in that statistic's sampling distribution.
+
+Big Idea: The bootstrap distribution of a statistic is  created from a random sample (no need to know the population).  The bootstrap distribution is a reasonable approximation to the shape and spread of the sampling distribution of the statistic.  
+
+*****
+
+Let's return to the initial example.  Suppose we wanted to use the bootstrap technique to simulate an approximation to the sampling distribution of the sample mean repari time.
+
+```{r repair_bootstrap_mean}
+comp.bootstrap.mean = apply(replicate(10000, sample(comp, length(comp), replace = T)), 2, mean)
+
+hist(comp.bootstrap.mean, main = "Bootstrap Distn of the Sample Mean", xlab = "Bootstrap Sample Mean")
+abline(v=mean(comp.bootstrap.mean), col="red", lwd=2)
+abline(v=mean(comp), col="blue", lwd=2, lty=2)
+
+
+```
+
+The bootstrap distribution of the mean is slightly right-skewed.  This suggests the true sampling distribution of the sample mean would also be right-skewed.  The bootstrap distribution of the sample mean has a mean of `r mean(comp.bootstrap.mean)`, which is very close in value to the original sample mean `r mean(comp)`.  The standard deviation of the bootstrap distriubutioni of the sample mean is `r sd(comp.bootstrap.mean)`, and this approximates the standard error of the sample mean if we could construct its true sampleing distribution.
+
+While we could use the mean as a measure of "typical" repair time, the skewed distribution suggests the median might be a better choice.  Unlike the sampling distribution of the sample mean, we do not have the Central Limit Theorem to rely upon the theoretical properties. However, we can apply bootstrap techniques to estimate the sampling distribution of the median:
+
+```{r}
+comp.bootstrap.median = apply(replicate(10000, sample(comp, length(comp), replace = T)), 2, median)
+
+hist(comp.bootstrap.median, main = "Bootstrap Distn of the Sample Median", xlab = "Bootstrap Sample Median")
+abline(v=mean(comp.bootstrap.median), col="red", lwd=2)
+abline(v=median(comp), col="blue", lwd=2, lty=2)
+
+```
+
+What happened?
+
+When the boostrap distribution is used for positional statistics (median, quartiles, etc) and the sample size is small, the results do not work well.  In our example, there are only 27 possible values for the sample median.  In our simulation, the following results were obtained:
+
+`r table(comp.bootstrap.median)`
+
+We did not observe all 27 possible values because some were very unlikely to occur.  For example, the maximum repair time was `r max(comp)`.  In order for this value to be one of the bootstrap medians, we would need to observe the maximum value of the sample in the bootstrap sample of 27 observations at least 14 times.  This is a Binomial random variable - we have 27 trials with the likelihood of sampling the maximum value is 1/27.  We cause the cumulative Binomial function in R to calculate the probability.  The likelihood of this happening is: $P(X \ge 14) = 1 - P(X \le 13)$ = `r 1 - pbinom(q = 13, size = 27, prob = 1/27)`.  
+
+So, how do we fix the problem we see with the bootstrap distribution for the median?  We can employ a technique called the *smoothed bootstrap*.  This technique relies on the kernel density estimate we previously discussed: 
+
+```{r comp_kde}
+#Let's create a blank plotting window with an x range between the BK drive thru times
+plot(1, type="n", xlab = "", ylab = "", xlim = c(-15, 115), ylim = c(0, 0.04))
+
+# Now add a dot representing each drive-thru time
+points(x = comp, y = rep(0, length(comp)), pch = 16, xlim = c(-15, 115), ylim = c(0, 0.04))
+
+# To add normal curves over each point, we can use the curve() function inside a for loop:
+sigma.k = sd(comp)/sqrt(length(comp))
+
+for (i in 1:length(comp)){
+  par(new=T)
+  curve(1/length(comp)*dnorm(x, mean=comp[i], sd=sigma.k), from = comp[i] -3*sigma.k, to = comp[i] + 3*sigma.k, xlim=c(-15, 115), ylim = c(0, 0.04))
+}
+
+x = seq(-15, 115, by=0.01)
+y = numeric(length(x))
+
+for(i in 1:length(x)){
+  y[i] = 1/length(comp) * sum(dnorm(x[i]-comp, mean=0, sd=sigma.k))
+}
+
+par(new=T)
+plot(x, y)
+
+
+```
+
+The kernel density estimate is meant to be a smoothed representation of the true underlying population.  So, if we could sample from the kernel density estimate, this would mimic taking repeated samples from the population.  How do we go about doing this?
+
+The kernel density estimate was constructed by first drawing a normal curve centered over each observed data value.  The normal curve suggests we would expect the observed value in the sample or something reasonably close.  For each observation, add random noise to the value obtained.  
+
+What will this look like?
+
+```{r comp_kde2}
+#Let's create a blank plotting window with an x range between the BK drive thru times
+plot(1, type="n", xlab = "", ylab = "", xlim = c(-15, 115), ylim = c(0, 0.04))
+
+# Now add a dot representing each drive-thru time
+points(x = comp, y = rep(0, length(comp)), pch = 16, xlim = c(-15, 115), ylim = c(0, 0.04))
+
+# To add normal curves over each point, we can use the curve() function inside a for loop:
+sigma.k = sd(comp)/sqrt(length(comp))
+
+for (i in 1:length(comp)){
+  par(new=T)
+  curve(1/length(comp)*dnorm(x, mean=comp[i], sd=sigma.k), from = comp[i] -3*sigma.k, to = comp[i] + 3*sigma.k, xlim=c(-15, 115), ylim = c(0, 0.04))
+}
+
+x = seq(-15, 115, by=0.01)
+y = numeric(length(x))
+
+for(i in 1:length(x)){
+  y[i] = 1/length(comp) * sum(dnorm(x[i]-comp, mean=0, sd=sigma.k))
+}
+
+par(new=T)
+plot(x, y)
+
+random.noise = rnorm(length(comp), mean = 0, sd = sigma.k)
+par(new=T)
+
+points(x = comp+random.noise, y = rep(0, length(comp)), pch = 16, xlim = c(-15, 115), ylim = c(0, 0.04), col="red")
+
+```
+
+In the graph above, the red dots are the original sample plus the addition of random noise.  Notice how they still follow the overall shape of the distribution.  The median of the original repair times was `r median(comp)`, and the median of the sample with the addition of random noise was `r median(comp+random.noise)`.  With the addition of random noise, we now have infnitely many possibilities for the bootstrap median.  
+
+The implementation of the smoothed bootstrap has the following steps:
+
+* Take a bootstrap sample from the observed data values.
+
+* Genereate a random sample of normal random variables with a mean of 0 and standard deviation $\frac{s}{\sqrt{n}}$.  This is the random noise.
+
+* Add the random noise to the bootstrap sample and calculate the statistic of interest.
+
+* Repeat this process 10,000 times to construct the bootstrap distribution of the statistic.
+
+```{r smooth_boot_median}
+smoothed.bootstrap.median = numeric(10000)
+
+for (i in 1:10000){
+  bootstrap.sample = sample(comp, length(comp), replace = T)
+  random.noise = rnorm(length(comp), mean = 0, sd = sd(comp)/sqrt(length(comp)))
+  smoothed.bootstrap.median[i] = median(bootstrap.sample + random.noise)
+}
+
+hist(smoothed.bootstrap.median, main = "Smoothed Bootstrap Distn of the Median", xlab = "Bootstrap Median")
+abline(v=mean(smoothed.bootstrap.median), lwd=2, col="red")
+abline(v=median(comp), lwd=2, lty=2, col="blue")
+
+
+```
+
+The smoothed boostrap seemed to work much better.  The true underlying sampling distribution of the sample median is continuous.  In the original bootstrap distribution of the median, we saw a discrete distribution because there were a finite number of possible vlues for the median.  That gives us a poor representation of the sampling distriubtion of the median.  The smoothed bootstrap technique returns a better approximation of the continous distribution.  Both the distributions center over the value of the sample median.  How does the spread of the two bootstrap distributoins compare?  The standard deviation of the original bootstrap distribution was `r sd(comp.bootstrap.median)`, and the standard deviation of the smoothed boostrap distribution was `r sd(smoothed.bootstrap.median)`.
+
+In this particular example, we have a problem because the kernel density estimate allows for values less than 0, and this is an impossibility in the context of our data.  How can this be solved?
+
+The idea is to use a transformation.  Suppose we use the transformation $X=\sqrt{Y}$ and find its kernel density estimate.  Then if we apply the smoothed bootstrap to the transformed values, we have obtained the square root of repair times.  While there's not a reasonable explanation what this particular value means, backtransforming by squaring the values returns us to the original scale of repair times.  And, because the backtransform is squaring the values, we no longer have to be concerned about obtaining negative values in the distribution.  
+
+Let's employ this approach to see how it works:
+
+```{r repair_transform_kde}
+#Let's the kernel density estiamtes for the original data & the transformed data side-by-side
+
+par(mfrow=c(1,2))
+
+plot(density(comp, kernel = "gaussian", bw=sd(comp)/sqrt(length(comp))), sub="Kernel Density Estimate", main="Repair Times - Untransformed", xlab="Repair Times", lwd=2)
+
+# Now transform the data by taking the square root
+
+sqrt.comp = sqrt(comp)
+
+plot(density(sqrt.comp, kernel = "gaussian", bw=sd(sqrt.comp)/sqrt(length(sqrt.comp))), sub= "Kernel Density Estimate", main="Repair Times - Untransformed", xlab="Sqrt(Repair Times)", lwd=2)
+
+```
+
+
+```{r smooth_boot_median_transform}
+smoothed.bootstrap.median = numeric(10000)
+
+for (i in 1:10000){
+  bootstrap.sample = sample(sqrt.comp, length(sqrt.comp), replace = T)
+  random.noise = rnorm(length(sqrt.comp), mean=0, sd=sd(sqrt.comp)/sqrt(length(comp)))
+  # backtransform to the original scale 
+  bootstrap.comp = (bootstrap.sample + random.noise)^2
+  smoothed.bootstrap.median[i] = median(bootstrap.comp)
+}
+
+hist(smoothed.bootstrap.median, main = "Smoothed Bootstrap Distn of the Median", xlab = "Bootstrap Median", sub= "Square Root Transformation")
+abline(v=mean(smoothed.bootstrap.median), col="red", lwd=2)
+abline(v=median(comp), col="blue", lwd=2, lty=2)
+
+
+```
+
+### Josh's Question
+
+The question raised is what impact does using the absolute value of the smoothed bootstrap sample have on the bootstrap distribution?
+
+Let's compare the original bootstrap, smoothed bootstrap, smoothed bootstrap with transformation, and smoothed boostrap with absolute value:
+
+```{r boot_comparisons, message=FALSE, warning=FALSE}
+boot.median = numeric(10000) #original bootstrap
+smoothed.boot.median = numeric(10000) #smoothed bootstrap
+smoothed.boot.tform.median = numeric(10000) # smoothed boostrap transformaton
+smoothed.boot.abs.median = numeric(10000) #smoothed bootstrap abs value
+
+for(i in 1:10000){
+  boot.sample = sample(length(comp), comp, replace=T)
+  boot.sample.tform =  sample(length(sqrt.comp), sqrt.comp, replace = T)
+  noise.original = rnorm(length(comp), mean = 0, sd=sd(comp)/sqrt(length(comp)))
+  noise.tform = rnorm(length(sqrt.comp), mean = 0, sd=sd(sqrt.comp)/sqrt(length(sqrt.comp)))
+  
+  boot.median[i] = median(boot.sample)
+  
+  smoothed.boot.median[i] = median(boot.sample + noise.original)
+  
+  smoothed.boot.tform.median[i] = median((boot.sample + noise.tform)^2)
+  
+  smoothed.boot.abs.median[i] = median(abs(boot.sample + noise.original))
+}
+
+par(mfrow=c(2,2))
+hist(boot.median)
+hist(smoothed.boot.median)
+hist(smoothed.boot.tform.median)
+hist(smoothed.boot.abs.median)
+
+
+```
+
+Let's compare the 4 distributions:
+
+Approach | Mean | Std Deviation
+---------|------|---------------
+Traditional | `r mean(boot.median)` | `r sd(boot.median)`
+Smoothed | `r mean(smoothed.boot.median)` | `r sd(smoothed.boot.median)`
+Smoothed with Transformation | `r mean(smoothed.boot.tform.median)` | `r sd(smoothed.boot.median)`
+Smoothed with Abs. Value | `r mean(smoothed.boot.abs.median)` | `r sd(smoothed.boot.abs.median)`

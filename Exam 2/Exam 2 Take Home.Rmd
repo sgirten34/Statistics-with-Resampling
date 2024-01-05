@@ -1,0 +1,345 @@
+---
+title: "Exam 2 - Take Home"
+author: "Scott Girten"
+date: "April 11, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The take home portion of Exam 2 will be submitted via Canvas as two files. The first is your R Markdown file; the second is the knitted HTML file. 
+
+*****
+
+## {.tabset .tabset-pills .tabset-fade}
+
+### Problem 1
+
+The variability in a distribution is most often quantified using the standard deviation. However, there are multiple ways in which the standard deviation can be estimated. Assume we plan to take a sample of size 25 from a normal population with mean 20 and standard deviation 4. The goal is to use the data collected in the sample to calculate an estimate of the population standard deviation, $\sigma$. The clear choice for estimator would be the sample standard deviation, but there are other estimators which can be used. 
+
+Estimator | Formula | Explanation 
+----------|---------|---------------------------
+Sample standard deviation, corrected | $s_c=\sqrt{\frac{\sum_{i=1}^{n} \big(y_i-\bar{y}\big)^2}{n-1}}$ | This is the most commonly used formula for the sample standard deviation where the sum of the squared deviations from the mean is divided by a corrected sample size (n - 1).
+Sample standard deviation, uncorrected | $s_u=\sqrt{\frac{\sum_{i=1}^{n} \big(y_i-\bar{y}\big)^2}{n}}$ | This is the uncorrected version of the sample standard deviation where the sum of the squared deviations is divided by the original sample size. 
+Range/4 | $r_4 = \frac{\text{max}-\text{min}}{4}$ | If a distribution is approximately normal, then the Empirical Rule states 95% of the observations should fall within 2 standard deviations (technically 1.96) of the mean. Assuming the min & max of the sample fall within this interval, then the range over 4 should reasonably approximate the standard deviation. 
+
+* Propose a fourth statistic which could be used to estimate the standard devaition based on the IQR ($Q_3 -Q_1$) of the sample. (Hint - think about the logic behind the use of range/4 when sampling from a normal population and use a similar approach to correct the IQR so it is a reasonable approximation.) (5 points)
+
+    If a distribution is approximately normal, then the Empirical Rule states 68% of the observations will occur within 1 standard deviation of the  mean.  The IQR comprises the middle 50% of a distribution.  Since the distribution is normal, we can assume the mean and median are approximately the same. The IQR would then be centered around the mean of the distribution and we could assume that the IQR would fall within 1 standard deviation of the mean.  To approximately estimate the standard deviation, the IQR would need to be scaled to the same interval from the Empirical Rule and then divided by 2.
+    
+    > $\text{Scale factor} = \frac{.68}{.50} = 1.36$
+    > 
+    > $s_{iqr} = \frac{(Q_3 - Q_1)}{2}(1.36)$
+
+
+
+* For each of the four statistics, simulate its sampling distribution by taking 10,000 samples of size n = 25 from a normal population with mean 20 and standard deviation 4. Create 4 histograms for the sampling distributions in a single graphics window with each histogram having the same x-limits. Add two vertical lines to each histogram - the first should be the simulated mean of the sampling distribution, and the second should be the drawn at the value of the parameter which each of these estimators is attempting to estimate. Include titles on each of your histograms with a label for which estimator is represented. Use the results of your simulation to fill in the table below. (12 points)
+
+```{r sd_sampling_distn}
+# Generate 10,000 samples from a normal distribution of mean 20 and standard deviation 4
+norm25.samples = replicate(10000, rnorm(25, mean = 20, sd = 4))
+
+# Create function to calculate the population standard deviation since this is not a pre-built funciton in R (at least I could not find a function)
+
+# I used a correction of the sample standard deviation since had trouble getting a correct value for the pop.sd without using a loop, wanted to knit as quickly as possible.
+pop.sd = function(x){
+  #return (sd(x) * sqrt(length(x-1) / length(x)))
+    meanX = mean(x)
+  sum = 0
+  
+  for(i in 1:(length(x))){
+    sum = sum + (x[i] - meanX)^2
+  }
+  return (sqrt(sum / length(x)))
+}
+# Function for standard deviation using range/4
+range.sd = function(x){
+  return ((max(x) - min(x)) / 4)
+}
+# Function for standard deviation using IQR
+iqRange.sd = function(x){
+  q1 = quantile(x, probs = 0.25)
+  q3 = quantile(x, probs = 0.75)
+  return ((q3 - q1) / 2 * 1.36)
+}
+
+# Create function to calculate the mean and standard error for the standard deviation estimators
+sd_estimator = function(norm25.samples){
+  
+  corrected.sd = apply(norm25.samples, 2, sd)
+  uncorrected.sd = apply(norm25.samples, 2, pop.sd)
+  r4.sd = apply(norm25.samples, 2, range.sd)
+  iqr.sd = apply(norm25.samples, 2, iqRange.sd)
+  
+  return (as.data.frame(cbind(corrected.sd,uncorrected.sd,r4.sd,iqr.sd)))
+  
+}
+
+sd.est25 = sd_estimator(norm25.samples)
+
+par(mfrow=c(2,2))
+
+hist(sd.est25$corrected.sd, main = "Sample (Corrected) Std Dev", xlim = c(1,7))
+abline(v=mean(sd.est25$corrected.sd), col="red", lwd=2)
+abline(v=4, col="blue")
+
+hist(sd.est25$uncorrected.sd, main = "Sample (Uncorrected) Std Dev", xlim = c(1,7))
+abline(v=mean(sd.est25$uncorrected.sd), col="red", lwd=2)
+abline(v=4, col="blue")
+
+hist(sd.est25$r4.sd, main = "Range/4 Std Dev", xlim = c(1,7))
+abline(v=mean(sd.est25$r4.sd), col="red", lwd=2)
+abline(v=4, col="blue")
+
+hist(sd.est25$iqr.sd, main = "IQR Std Dev", xlim = c(1,7))
+abline(v=mean(sd.est25$iqr.sd), col="red", lwd=2)
+abline(v=4, col="blue")
+
+```
+
+
+Estimator | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------|-----------|-----------
+Sample Std Deviation, corrected | `r mean(sd.est25$corrected.sd)` | `r sd(sd.est25$corrected.sd)`
+Sample Std Deviation, uncorrected | `r mean(sd.est25$uncorrected.sd)` | `r sd(sd.est25$uncorrected.sd)` 
+Range/4 | `r mean(sd.est25$r4.sd)` | `r sd(sd.est25$r4.sd)`
+IQR Estimator (part a) | `r mean(sd.est25$iqr.sd)` | `r sd(sd.est25$iqr.sd)`
+    
+* One feature which has an effect on the sampling distribution of these statistics is the sample size used. Recreate the sampling distributions for each of the statistics above for at least three new increasing sample sizes (with reasonable discrepancies between the sample sizes you choose).  Fill in **four** tables (like the one below) one for each of the estimators. For each estimator briefly comment on the patterns in the mean and standard deviations of the sampling distributions as the sample size increases. (12 points)
+
+```{r sd_sampling_distn2}
+# Generate 10,000 samples of n = 50, 100, 250 for normal distn mean = 20 and sd = 4
+norm50.samples = replicate(10000, rnorm(50, mean = 20, sd = 4))
+norm100.samples = replicate(10000, rnorm(100, mean = 20, sd = 4))
+norm250.samples = replicate(10000, rnorm(250, mean = 20, sd = 4))
+
+sd.est50 = sd_estimator(norm50.samples)
+sd.est100 = sd_estimator(norm100.samples)
+sd.est250 = sd_estimator(norm250.samples)
+
+
+
+```
+
+Estimator, $s_c$ | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------|-----------|-----------
+n = 25| `r mean(sd.est25$corrected.sd)` | `r sd(sd.est25$corrected.sd)`
+n = 50| `r mean(sd.est50$corrected.sd)` | `r sd(sd.est50$corrected.sd)`
+n = 100| `r mean(sd.est100$corrected.sd)` | `r sd(sd.est100$corrected.sd)` 
+n = 250| `r mean(sd.est250$corrected.sd)` | `r sd(sd.est250$corrected.sd)` 
+
+The mean of $s_c$ approaches the value of 4 as the sample size increases and the standard error of the sampling distribution decreases as the sample size increases.
+
+*****
+
+Estimator, $s_u$ | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------|-----------|-----------
+n = 25| `r mean(sd.est25$uncorrected.sd)` | `r sd(sd.est25$uncorrected.sd)`
+n = 50| `r mean(sd.est50$uncorrected.sd)` | `r sd(sd.est50$uncorrected.sd)`
+n = 100| `r mean(sd.est100$uncorrected.sd)` | `r sd(sd.est100$uncorrected.sd)` 
+n = 250| `r mean(sd.est250$uncorrected.sd)` | `r sd(sd.est250$uncorrected.sd)`
+
+The mean of $s_u$ approaches the value of 4 as the sample size increases and the standard error of the sampling distribution decreases as the sample size increases.
+
+*****
+
+Estimator, $r_4$ | Mean of the Sampling Distn | Std Error of the Sampling Distn
+----------|-----------|-----------
+n = 25| `r mean(sd.est25$r4.sd)` | `r sd(sd.est25$r4.sd)`
+n = 50| `r mean(sd.est50$r4.sd)` | `r sd(sd.est50$r4.sd)`
+n = 100| `r mean(sd.est100$r4.sd)` | `r sd(sd.est100$r4.sd)` 
+n = 250| `r mean(sd.est250$r4.sd)` | `r sd(sd.est250$r4.sd)`
+
+The mean of $r_4$ moves further away from 4 as the sample size increases while the standard error for $r_4$ decreases as the sample size increases.
+
+*****
+
+Estimator, $s_{iqr}$ | Mean of the Sampling Distn | Std Error of the Sampling Distn
+------------|---------------------------|------------------------
+n = 25| `r mean(sd.est25$iqr.sd)` | `r sd(sd.est25$iqr.sd)`
+n = 50| `r mean(sd.est50$iqr.sd)` | `r sd(sd.est50$iqr.sd)`
+n = 100| `r mean(sd.est100$iqr.sd)` | `r sd(sd.est100$iqr.sd)` 
+n = 250| `r mean(sd.est250$iqr.sd)` | `r sd(sd.est250$iqr.sd)`
+
+The mean of $s_{iqr}$ does approach 4, however $r_{iqr}$ appears to be a biased estimator for the population standard deviation.  The standard error of $s_{iqr}$ decreases as the sample size increases.
+
+*****
+
+* One of the four estimators seems to do a very poor job as the sample size increases. Provide a brief explanation for why this estimator performs poorly as the sample size increases. (5 points)
+
+    The $r_4$ estimator becomes less accurate as the sample size increases.  This estimator relies on the premise that the minimum and maximum roughly comprise the 95% confidence interval for the distribution.  As the sample size increases there is an increased chance that values outside of the 95% confidence interval will be sampled, thus increasing the min-max interval.  Since the interval becomes wider and is divided by a fixed constant, the estimate will become larger as the sample size increases.  
+
+*****
+### Problem 2
+
+A statistician would like to develop a confidence interval to estimate the maximum of a uniform distribution. To do this, the first requirement is to propose a statistic which could be used to estimate the maximum. The following three statistics have been proposed. 
+
+* $T_1 = 2\bar{Y}$ 
+
+* $T_2 = 2\tilde{Y}$ (twice the sample median)
+
+* $T_3 = \text{min} + \text{max}$
+
+* Create 3 R functions that return the statistics above as output for any vector of data. (6 points)
+
+```{r three_functions}
+# T1 = 2(ybar)
+t.one = function(vctr){
+  return (2 * mean(vctr))
+}
+# T2 = 2 * median
+t.two = function(vctr){
+  return (2 * median(vctr))
+}
+# T3 = min + max
+t.three = function(vctr){
+  return (min(vctr) + max(vctr))
+}
+
+```
+
+
+* To investigate the confidence intervals generated from these statistics, we plan to use one of the following bootstrap approaches: the traditional percentile interval or the smoothed percentile interval (using $\sigma_k=s/\sqrt{n}$). Generate 500 random samples of size 50 from a Uniform distribution with a minimum of 0 and a maximum of 20. For each sample, calculate a 95% confidence interval for each of the 3 statistics using the 2 approaches above. Store the upper and lower limits of the interval (you should end up with 6 sets of 500 confidence intervals). Using the values generated, fill in the table below: (12 points)
+
+```{r uniform_max_ci}
+# storage matrices
+boot1.interval = matrix(nr=500, nc=3)
+smboot1.interval = matrix(nr=500, nc=3)
+
+boot2.interval = matrix(nr=500, nc=3)
+smboot2.interval = matrix(nr=500, nc=3)
+
+boot3.interval = matrix(nr=500, nc=3)
+smboot3.interval = matrix(nr=500, nc=3)
+
+for (i in 1:500){
+  uniform.sample = runif(50, min = 0, max = 20)
+  boot.sample = replicate(10000, sample(uniform.sample, length(uniform.sample), replace = T))
+  noise = replicate(10000, rnorm(50, mean = 0, sd = sd(uniform.sample) / sqrt(length(uniform.sample))))
+  
+  # Calculate T1 using both approaches
+  boot1.max = apply(boot.sample, 2, t.one)
+  boot1.interval[i,1] = quantile(boot1.max, probs = 0.025)
+  boot1.interval[i,2] = quantile(boot1.max, probs = 0.975)
+  boot1.interval[i,3] = ifelse(boot1.interval[i,1] <= 20 && boot1.interval[i,2] >= 20, 1, 0)
+  
+  smboot1.max = apply(boot.sample + noise, 2, t.one)
+  smboot1.interval[i,1] = quantile(smboot1.max, probs = 0.025)
+  smboot1.interval[i,2] = quantile(smboot1.max, probs = 0.975)
+  smboot1.interval[i,3] = ifelse(smboot1.interval[i,1] <= 20 && smboot1.interval[i,2] >= 20, 1, 0)
+  
+  # Calculate T2 using both approaches
+  boot2.max = apply(boot.sample, 2, t.two)
+  boot2.interval[i,1] = quantile(boot2.max, probs = 0.025)
+  boot2.interval[i,2] = quantile(boot2.max, probs = 0.975)
+  boot2.interval[i,3] = ifelse(boot2.interval[i,1] <= 20 && boot2.interval[i,2] >= 20, 1, 0)
+  
+  smboot2.max = apply(boot.sample + noise, 2, t.two)
+  smboot2.interval[i,1] = quantile(smboot2.max, probs = 0.025)
+  smboot2.interval[i,2] = quantile(smboot2.max, probs = 0.975)
+  smboot2.interval[i,3] = ifelse(smboot2.interval[i,1] <= 20 && smboot2.interval[i,2] >= 20, 1, 0)
+  
+  # Calculate T3 using both approaches
+  boot3.max = apply(boot.sample, 2, t.three)
+  boot3.interval[i,1] = quantile(boot3.max, probs = 0.025)
+  boot3.interval[i,2] = quantile(boot3.max, probs = 0.975)
+  boot3.interval[i,3] = ifelse(boot3.interval[i,1] <= 20 && boot3.interval[i,2] >= 20, 1, 0)
+  
+  smboot3.max = apply(boot.sample + noise, 2, t.three)
+  smboot3.interval[i,1] = quantile(smboot3.max, probs = 0.025)
+  smboot3.interval[i,2] = quantile(smboot3.max, probs = 0.975)
+  smboot3.interval[i,3] = ifelse(smboot3.interval[i,1] <= 20 && smboot3.interval[i,2] >= 20, 1, 0)
+  
+}
+
+```
+
+
+Statistic | Interval | Estimated Coverage | Average Interval Width
+-------|-------|-------|-------
+$T_1$ | Percentile | `r mean(boot1.interval[,3])` | `r mean(boot1.interval[,2]) - mean(boot1.interval[,1])` 
+$T_1$ | Smoothed Percentile | `r mean(smboot1.interval[,3])` | `r mean(smboot1.interval[,2]) - mean(smboot1.interval[,1])`
+$T_2$ | Percentile | `r mean(boot2.interval[,3])` |  `r mean(boot2.interval[,2]) - mean(boot2.interval[,1])` 
+$T_2$ | Smoothed Percentile | `r mean(smboot2.interval[,3])`| `r mean(smboot2.interval[,2]) - mean(smboot2.interval[,1])`
+$T_3$ | Percentile | `r mean(boot3.interval[,3])` |  `r mean(boot3.interval[,2]) - mean(boot3.interval[,1])` 
+$T_3$ | Smoothed Percentile |`r mean(smboot3.interval[,3])` | `r mean(smboot3.interval[,2]) - mean(smboot3.interval[,1])`
+
+* Based on your simulation, discuss which combination of statistic and confidence interval you would recommend for estimating the maximum. In your discussion you should take into account the anticipated variability in the estimated coverage when 500 confidence intervals are generated with a level of confidence of 95%. (6 points)
+
+    For estimating the maximum of a uniform distribution, the smoothed percentile interval for statistic $T_3$ represents the best combination of coverage combined with a relatively narrow 95% confidence interval.  This statistic was the most accurate of the 6 statistics, with the 95% confidence interval containing the true maximum (20) 99.2% of the time.  This statistic is the second most precise statistic of the 6 tested, with an average 95% confidence interval width of `r round(mean(smboot3.interval[,2]) - mean(smboot3.interval[,1]), 2)`. This combination of being the most accurate and the second most precise statistic is why $T_3$ smoothed percentile interval is the best choice.
+
+* Many model the waiting time for public transportation using a Uniform distribution. The data posted on Blackboard is a sample of 50 waiting times for a local bus. Using the statistic and interval selected in the previous question, estimate the maximum length of time one can expect to wait for the bus using 95% confidence. Interpret the interval calculated. (5 points)
+
+```{r estimated_wait_time}
+bus.data = read.csv("waiting time.csv")
+bus.data = as.matrix(bus.data)
+
+bus.interval = matrix(nr=500, nc=3)
+
+for(i in 1:500){
+  bus.sample = replicate(10000, sample(bus.data, length(bus.data), replace = T))
+  noise = replicate(10000, rnorm(50, mean = 0, sd = sd(bus.data) / sqrt(length(bus.data))))
+  
+  bus.max = apply(bus.sample + noise, 2, t.three)
+  bus.interval[i,1] = quantile(bus.max, probs = 0.025)
+  bus.interval[i,2] = quantile(bus.max, probs = 0.975)
+  bus.interval[i,3] = ifelse(bus.interval[i,1] <= 20 && bus.interval[i,2] >= 20, 1, 0)
+}
+
+lowlim = mean(bus.interval[,1])
+uplim = mean(bus.interval[,2])
+
+
+```
+    With 95% confidence, the maximum amount of time you would have to wait for the local bus would be between `r round(lowlim, 2)` and `r round(uplim, 2)` minutes.
+
+* Using the waiting time data from the previous question, estimate the maximum waiting time using the third statistic proposed and the critical value bootstrap approach (the "bootstrap within the bootstrap") with 95% confidence.  Produce a histogram of the simulated critical values, and interpret the interval found. (8 points)
+
+```{r bootstrap_within_bootstrap}
+bootstrap.cv = numeric(10000)
+bootstrap.max = numeric(10000)
+est.std.error = numeric(10000)
+
+for(i in 1:10000){
+  boot.bus.sample = sample(bus.data, length(bus.data), replace = T)
+  bootstrap.max[i] = t.three(boot.bus.sample)
+  
+  # Standard Error of the max
+  bootstrap.error = replicate(100, sample(boot.bus.sample, length(boot.bus.sample), replace = T))
+  est.std.error[i] = sd(apply(bootstrap.error, 2, t.three))
+  
+  bootstrap.cv[i] = (bootstrap.max[i] - t.three(bus.data)) / est.std.error[i]
+  
+  
+}
+
+hist(bootstrap.cv)
+
+lowlim2 = t.three(bus.data) - quantile(bootstrap.cv, probs = 0.975)*sd(bootstrap.max)
+uplim2 = t.three(bus.data) - quantile(bootstrap.cv, probs = 0.025)*sd(bootstrap.max)
+
+
+
+```
+    With 95% confidence, I estimate the max waiting time for the local bus to be between `r round(lowlim2, 2)` and `r round(uplim2, 2)` minutes.
+
+* Explain why the sample maximum was *not* used as a statistic to estimate the true population maximum using bootstrap techniques. (4 points)
+
+    
+```{r sample_max_bias}
+
+uniform.samples = replicate(10000, runif(50, 0, 20))
+
+uniform.max = apply(uniform.samples, 2, max)
+
+hist(uniform.max, main = "Sampling Distn of the Sample Maximum", xlab = "Sample Maximum")
+
+abline(v=mean(uniform.max), col="blue", lwd=2)
+
+sample.max = mean(uniform.max)
+
+```
+
+    
+The sample maximum was not used to estimate the true population maximum because the sample maximum would be a biased estimator for the population maximum.  The blue line on the histogram above shows the expected value of the sample maximum, `r sample.max`.  The bias is the difference in the expected value of the sample and the true population value.  In this case we know the population value is 20.  The difference then between the expected value and the population value is `r sample.max - 20`, which represents the bias of the sample maximum as the estimator.
